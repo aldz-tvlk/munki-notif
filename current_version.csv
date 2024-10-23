@@ -1,33 +1,59 @@
 Software,Mungki Version,Web Version
-Acrobat Reader,24.003.20112,24.003.20121
-Amazon Q,2024.0.0,
-Android Studio,2024.1.2.12,2024.2.1
+Acrobat Reader,24.003.20112,24.003.20180
+Amazon Q,1.4.5,
+Android Studio,2024.2.1,2024.2.1
 Appium,v2024.9.1,v2024.9.1
 Appium Server,2024.9.1,
-Asana,version 2.2.1,version 2.2.3
-balsamiq,,4.7.5
-Burp Suite Community,2024.7.6,2024.7.6
-Google Chrome, 129.0.6668.71,130.0.6723.19
-DBeaver Community,24.2.1,24.2.1
-Figma,1.0.0,
+Asana,version 2.2.3,version 2.2.3
+balsamiq,4.7.5,4.7.5
+Burp Suite Community,2024.8.5,2024.8.5
+Google Chrome,130.0.6723.59,130.0.6723.59
+DBeaver Community,24.2.2,24.2.2
+Figma,124.4.7,
 FileZilla,3.67.1,3.67.1
-Firefox,130.0.1,130.0.1
-GitHub Desktop,3.4.5,3.4.5
-GnuPG,2.4.1,2.4.5
-Go,1.23.0,go1.23.1
+Firefox,131.0.2,131.0.2
+Forticlient,7.4.0.1645,
+Git,2.23.0,
+GitHub Desktop,3.4.5,3.4.6
+GnuPG,2.4.5,2.4.5
+Go,go1.23.2,go1.23.2
 Google Drive,96.0,98.0
-Homebrew,4.3.24,4.3.24
+Homebrew,4.4.0,4.4.0
 IntelliJ IDEA CE,2024.2.1,2024.2.3
-Intellij Ultimate,,
-Iterm2,,
-Lark Suite,,
-Microsoft Remote Desktop,,
-PDF Sam,v5.2.6,v5.2.6
-Rancher Desktop,,
-Slack,,
-SourceTree,,
-Spotify,,
-Tableau Desktop,,
-Tableau Prep Builder,,
-Visual Studio Code,,
-Zoom,1.0.0,Version 6.2.3 (40682)
+iTerm2,3.5.5,3.5.5
+Lark Suite,7.26.0.48,
+LastPass,4.125.0,4.132.1
+Microsoft Edge,127.0.2651.86,129.0.2792.89
+Microsoft Office 365,16.89.24091630,16.90.24101387
+Microsoft Remote Desktop,10.9.9,11.0.5
+Microsoft Teams,24091.212.2846.1453,24244.507.3125.3475
+Mockoon,v8.4.0,v8.4.0
+MongoDB Compass,1.43.6,1.44.5
+Node JS,v22.8.0,v22.9.0
+Nord VPN,,
+NoSQL Workbench,3.13.0,3.13.0
+Notion,,
+PDF Sam,v5.2.8,v5.2.8
+PgAdmin 4,8.11,8.11
+Postman,11.15,11.16
+Proxyman,5.9.0,5.9.0
+PyCharm,2024.2.0.1,2024.2.3
+Python,3.13.0,3.13.0
+Rakuten Viber,,
+Rancher Desktop,1.16.0,1.16.0
+Reactotron,3.7.0,3.7.0
+RStudio,2024.04.2+764.pro1,2024.09.0+375.pro3
+Skype,8.125.0,8.128.0.207
+Slack,4.40.133,4.40.133
+Sourcetree,4.2.8,4.2.8
+Spotify,1.0.0,
+Sublime Text 4,4169,4180
+SwiftFormat for Xcode,,
+Tableau Desktop,2024.2.2,2024.2.3
+Tableau Prep Builder,2024.2.0,2024.2.3
+Visual Studio Code,1.94.2,1.94.2
+Vysor,v5.0.7,v5.0.7
+Webex Mac,44.9.0,44.10.0.30906
+WebStorm,Version 2024.2 (2024.2.3),Version 2024.2 (2024.2.3)
+XCode,,
+Zoom,Version 6.2.3 (40682),Version 6.2.3 (40682)

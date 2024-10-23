@@ -4,33 +4,32 @@ import csv
 import json
 import os
 
-def check_latest_version_asana():
-    url = "https://asana.com/download"
+# Fungsi untuk mendapatkan versi terbaru Adobe Acrobat Reader dari halaman HTML
+def check_latest_version_acrobat_reader():
+    url = "https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/index.html"
     response = requests.get(url)
-
+    
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Temukan elemen dengan atribut data-sublocation="Hero"
-        hero_section = soup.find('section', {'data-sublocation': 'Hero'})
         
-        if hero_section:
-            # Cari semua elemen <span> di dalam Hero section
-            span_elements = hero_section.find_all('span')
-
-            for span in span_elements:
-                text = span.get_text(strip=True)
-                
-                # Periksa apakah teks tersebut adalah versi (misalnya, pola "v1.x.x" atau "V1.x.x")
-                if text.lower().startswith('v') and any(char.isdigit() for char in text):
-                    latest_version = text
-                    #print(f"Latest Asana version found: {latest_version}")
-                    return latest_version
-
-            print("Version information not found.")
-            return None
+        # Temukan semua elemen <span> yang berisi informasi versi
+        version_elements = soup.find_all('span', class_='std std-ref')
+        latest_version = None
+        
+        # Ambil versi terbaru dari elemen yang ditemukan
+        if version_elements:
+            for element in version_elements:
+                text = element.get_text(strip=True)
+                # Periksa apakah versi adalah format versi yang valid dan bukan untuk Windows Only
+                if 'Windows Only' not in text:
+                    latest_version = text.split(' ')[0]
+                    break
+        
+        if latest_version:
+            #print(f"Latest Acrobat Reader version found: {latest_version}")
+            return latest_version
         else:
-            print("Hero section not found.")
+            print("Version information not found.")
             return None
     else:
         print(f"Gagal mengakses halaman. Status code: {response.status_code}")
@@ -45,8 +44,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Asana", "1.1.1", ""])
-
+            writer.writerow(["Acrobat Reader", "24.003.20112", ""])
     
     # Baca file CSV
     with open(filename, 'r') as file:
@@ -113,21 +111,21 @@ def main():
     # Baca semua versi saat ini dari file CSV
     versions = read_current_version_csv()
     
-    # Cek versi terbaru dari Asana
-    latest_asana_version = check_latest_version_asana()
-    asana_mungki_version, asana_web_version = versions.get('Asana', (None, None))
+    # Cek versi terbaru dari Adobe Acrobat Reader
+    latest_acrobat_reader_version = check_latest_version_acrobat_reader()
+    acrobat_reader_mungki_version, acrobat_reader_web_version = versions.get('Acrobat Reader', (None, None))
 
     # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
-    if compare_versions(asana_mungki_version, latest_asana_version):
-        print(f"Versi baru Asana tersedia: {latest_asana_version}")
+    if compare_versions(acrobat_reader_mungki_version, latest_acrobat_reader_version):
+        print(f"Versi baru Acrobat Reader tersedia: {latest_acrobat_reader_version}")
         
         # Perbarui kolom Web Version di file CSV
-        update_web_version_csv("Asana", latest_asana_version)
+        update_web_version_csv("Acrobat Reader", latest_acrobat_reader_version)
         
-        # Kirim notifikasi ke Slack
-        send_notification_telegram("Asana", asana_mungki_version, latest_asana_version)
+        # Kirim notifikasi ke Telegram
+        send_notification_telegram("Acrobat Reader", acrobat_reader_mungki_version, latest_acrobat_reader_version)
     else:
-        print("Versi Asana sudah yang terbaru.")
+        print("Versi Acrobat Reader sudah yang terbaru.")
 
 if __name__ == "__main__":
     main()

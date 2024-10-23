@@ -8,48 +8,30 @@ import re
 telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
 chat_id = "-4523501737"  # Chat ID untuk Telegram
 
-# URL to check Chrome Stable Channel updates
-url = "https://chromereleases.googleblog.com/search/label/Stable%20updates"
+# URL to get iTerm2 release version
+url = "https://iterm2.com/downloads.html"
 
-# Function to get the latest version of Chrome using requests and BeautifulSoup
-def check_latest_version_chrome():
+# Function to get the latest version of iTerm2 using requests and BeautifulSoup
+def check_latest_version_iterm2():
     response = requests.get(url)
+
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Cari elemen post yang berisi 'Stable Channel Update for Desktop'
-        posts = soup.find_all('div', class_='post')
-        
-        for post in posts:
-            title_element = post.find('h2', class_='title')
-            if title_element and "Stable Channel Update for Desktop" in title_element.get_text():
-                # Temukan konten dalam post
-                post_content = post.find('div', class_='post-body')
-                if post_content:
-                    version_text = post_content.get_text()
-                    
-                    # Gunakan regex untuk mencari versi Chrome
-                    version_match = re.findall(r'(\d{2,3}\.\d+\.\d+\.\d+)', version_text)
+        # Look for the first release information that contains the version number
+        version_tag = soup.find('a', href=re.compile(r'iTerm2.*\.zip'))  # Looks for links to .zip files with version info
 
-                    if version_match:
-                        # Ambil versi terbaru dari hasil pencarian
-                        latest_version = version_match[-1]  # Biasanya versi terbaru ada di akhir
-                        
-                        # Cek apakah versi sesuai dengan yang dicari
-                        if latest_version == latest_version:
-                            #print(f"Version found: {latest_version}")  # Debugging output
+        if version_tag:
+            # Extract version number from the text (e.g., iTerm2-3_4_18.zip -> 3.4.18)
+            version_match = re.search(r'iTerm2-(\d+_\d+_\d+)\.zip', version_tag['href'])
+            if version_match:
+                version = version_match.group(1).replace('_', '.')  # Convert underscore to dots
+                return version
 
-                            return latest_version
-                        else:
-                            print(f"Found version: {latest_version}, but it's not the expected version.")
-                    else:
-                        print("Could not find version number in the text.")
-                break  # Keluar dari loop jika sudah menemukan post
-        
-        print("Could not find 'Stable Channel Update for Desktop' post.")
+        print("Could not find the version information in the page.")
         return None
     else:
-        print(f"Failed to access Chrome update page. Status code: {response.status_code}")
+        print(f"Failed to access iTerm2 page. Status code: {response.status_code}")
         return None
 
 # Function to read the current version from the CSV file
@@ -60,7 +42,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Google Chrome", "0.0.0", ""])  # Default value if no data exists yet
+            writer.writerow(["iTerm2", "0.0.0", ""])  # Default value if no data exists yet
 
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -114,17 +96,17 @@ def send_notification_telegram(software_name, mungki_version, latest_version):
 def main():
     versions = read_current_version_csv()
 
-    latest_chrome_version = check_latest_version_chrome()
-    chrome_mungki_version, chrome_web_version = versions.get('Google Chrome', (None, None))
+    latest_iterm2_version = check_latest_version_iterm2()
+    iterm2_mungki_version, iterm2_web_version = versions.get('iTerm2', (None, None))
 
-    if latest_chrome_version and compare_versions(chrome_mungki_version, latest_chrome_version):
-        print(f"New version of Google Chrome available: {latest_chrome_version}")
+    if latest_iterm2_version and compare_versions(iterm2_mungki_version, latest_iterm2_version):
+        print(f"New version of iTerm2 available: {latest_iterm2_version}")
 
-        update_web_version_csv("Google Chrome", latest_chrome_version)
+        update_web_version_csv("iTerm2", latest_iterm2_version)
 
-        send_notification_telegram("Google Chrome", chrome_mungki_version, latest_chrome_version)
+        send_notification_telegram("iTerm2", iterm2_mungki_version, latest_iterm2_version)
     else:
-        print("Google Chrome is up to date or could not retrieve the latest version.")
+        print("iTerm2 is up to date or could not retrieve the latest version.")
 
 if __name__ == "__main__":
     main()

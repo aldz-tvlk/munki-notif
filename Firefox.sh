@@ -27,16 +27,17 @@ def check_latest_version_firefox():
                 # Temukan versi terbaru dalam sublist (elemen <a> di dalam <li>)
                 latest_version = sublist.find('li').find('a').text
             else:
-                # Jika sublist tidak ditemukan
-                print("Sublist tidak ditemukan.")
-                latest_version = "Tidak ditemukan"
+                # Jika sublist tidak ditemukan, cari elemen <strong><a>
+                strong_tag = first_li.find('strong')
+                if strong_tag:
+                    latest_version = strong_tag.find('a').text
+                else:
+                    latest_version = "Tidak ditemukan"
         else:
             # Jika elemen <li> pertama tidak ditemukan
-            print("Elemen <li> pertama tidak ditemukan.")
             latest_version = "Tidak ditemukan"
     else:
         # Jika elemen <ol> dengan class 'c-release-list' tidak ditemukan
-        print("Elemen dengan class 'c-release-list' tidak ditemukan.")
         latest_version = "Tidak ditemukan"
 
     return latest_version
@@ -86,25 +87,25 @@ def update_web_version_csv(software_name, new_version):
 def compare_versions(mungki_version, web_version):
     return mungki_version != web_version
 
-## Fungsi untuk mengirim notifikasi ke Telegram
+# Fungsi untuk mengirim notifikasi ke Telegram
 def send_notification_telegram(software_name, mungki_version, web_version):
-    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
-    chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}!\nCurrent version: {mungki_version}\nLatest version: {web_version}"
+    bot_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram Anda
+    chat_id = "-4523501737"  # Ganti dengan chat ID Anda (bisa ID pribadi atau grup)
     
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
+    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest Version: {web_version}"
+    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+    payload = {
         'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'  # Optional: Menggunakan Markdown untuk format pesan yang lebih baik
+        'text': telegram_message
     }
     
     try:
-        response = requests.get(send_text_url, params=params)
+        response = requests.post(telegram_url, data=payload)
         
         # Debugging: Cetak status code dari respon Telegram
-        print(f"Telegram response status code: {response.status_code}")
-        print(f"Telegram response text: {response.text}")
+        #print(f"Telegram response status code: {response.status_code}")
+        #print(f"Telegram response text: {response.text}")
         
         # Cek jika respon status bukan 200, artinya ada masalah
         if response.status_code != 200:
@@ -112,7 +113,7 @@ def send_notification_telegram(software_name, mungki_version, web_version):
     except Exception as e:
         print(f"Error sending notification to Telegram: {e}")
 
-# Proses utama untuk mengecek versi dan memperbarui jika diperlukan
+# Ganti fungsi send_notification_slack dengan send_notification_telegram di main()
 def main():
     # Baca versi saat ini dari file CSV
     software_name, mungki_version, web_version = read_current_version_csv()
@@ -127,7 +128,7 @@ def main():
         # Perbarui kolom Web Version di file CSV
         update_web_version_csv(software_name, latest_firefox_version)
         
-        # Kirim notifikasi ke Slack
+        # Kirim notifikasi ke Telegram
         send_notification_telegram(software_name, mungki_version, latest_firefox_version)
     else:
         print("Versi Firefox sudah yang terbaru.")

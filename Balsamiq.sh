@@ -86,7 +86,7 @@ def compare_versions(mungki_version, web_version):
 def send_notification_telegram(software_name, mungki_version, web_version):
     telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
     chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}!\nCurrent version: {mungki_version}\nLatest version: {web_version}"
+    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"
     
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
     params = {
@@ -99,8 +99,8 @@ def send_notification_telegram(software_name, mungki_version, web_version):
         response = requests.get(send_text_url, params=params)
         
         # Debugging: Cetak status code dari respon Telegram
-        print(f"Telegram response status code: {response.status_code}")
-        print(f"Telegram response text: {response.text}")
+        #print(f"Telegram response status code: {response.status_code}")
+        #print(f"Telegram response text: {response.text}")
         
         # Cek jika respon status bukan 200, artinya ada masalah
         if response.status_code != 200:

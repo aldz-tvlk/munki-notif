@@ -3,11 +3,14 @@ import csv
 import json
 import os
 
+# Token Github
+Gtoken = "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"
+
 # Fungsi untuk mendapatkan versi terbaru PDF Sam menggunakan GitHub API dengan autentikasi
 def check_latest_version_pdfsam():
     api_url = "https://api.github.com/repos/torakiki/pdfsam/releases/latest"
     headers = {
-       'Authorization': 'token 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',  # Ganti dengan token GitHub Anda
+       'Authorization': f'token {Gtoken}',  # Ganti dengan token GitHub Anda
        'Accept': 'application/vnd.github.v3+json'
     }
     response = requests.get(api_url, headers=headers)
@@ -15,7 +18,7 @@ def check_latest_version_pdfsam():
     if response.status_code == 200:
         data = response.json()
         latest_version = data['tag_name']  # Mengambil versi terbaru dari tag_name
-        print(f"Latest PDF Sam version found: {latest_version}")
+        #print(f"Latest PDF Sam version found: {latest_version}")
         return latest_version
     else:
         print(f"Gagal mengakses API GitHub PDF Sam. Status code: {response.status_code}")
@@ -30,7 +33,6 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Firefox", "13.0.0.1", ""])
             writer.writerow(["PDF Sam", "4.3.0", ""])
     
     # Baca file CSV
@@ -71,7 +73,7 @@ def compare_versions(mungki_version, web_version):
 def send_notification_telegram(software_name, mungki_version, web_version):
     telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
     chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}!\nCurrent version: {mungki_version}\nLatest version: {web_version}"
+    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"
     
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
     params = {

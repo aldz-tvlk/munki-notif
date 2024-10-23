@@ -26,7 +26,7 @@ def check_latest_version_filezilla():
         
         if version_element:
             latest_version = version_element['name']  # Mengambil nomor versi dari atribut name
-            print(f"Latest FileZilla version found: {latest_version}")
+            #print(f"Latest FileZilla version found: {latest_version}")
             return latest_version
         
         print("Version information not found.")
@@ -56,7 +56,6 @@ def read_current_version_csv():
 # Fungsi untuk memperbarui kolom Web Version di file CSV
 def update_web_version_csv(software_name, new_version):
     filename = 'current_version.csv'
-    
     rows = []
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -77,7 +76,10 @@ def compare_versions(mungki_version, web_version):
 
 # Fungsi untuk mengirim notifikasi ke Telegram
 def send_notification_telegram(software_name, mungki_version, web_version):
-    telegram_message = f"Update Available for {software_name}!\nCurrent version: {mungki_version}\nLatest version: {web_version}"
+    telegram_message = (f"Update Available for {software_name}!\n"
+                        f"Mungki version: {mungki_version}\n"
+                        f"Latest version: {web_version}")
+
     send_text_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     params = {
         'chat_id': CHAT_ID,

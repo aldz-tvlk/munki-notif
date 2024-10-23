@@ -3,39 +3,39 @@ from bs4 import BeautifulSoup
 import csv
 import os
 
-# Fungsi untuk mendapatkan versi terbaru Go dari halaman rilis
-def check_latest_version_go():
-    url = "https://golang.org/dl/"
-    response = requests.get(url)
-
-    if response.status_code == 200:
+# Fungsi untuk mendapatkan versi terbaru Webex (Mac) dari halaman
+def check_latest_version_webex_mac():
+    url = "https://help.webex.com/en-us/article/mqkve8/Webex-App-%7C-Release-notes"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
+        
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Temukan elemen yang mengandung versi terbaru
-        version_tag = soup.find('h3', class_='toggleButton')  # Mencari elemen h3 dengan kelas toggleButton
-        if version_tag:
-            latest_version = version_tag.find('span').text.strip()  # Mengambil teks dari elemen span
-            #print(f"Latest Go version found: {latest_version}")
+        
+        # Cari elemen <p> yang berisi teks "Mac—" dan ambil versinya
+        version_element = soup.find('p', string=lambda s: s and 'Mac—' in s)
+        
+        if version_element:
+            latest_version = version_element.get_text(strip=True).replace('Mac—', '')
+            #print(f"Latest Webex version for Mac found: {latest_version}")
             return latest_version
-        else:
-            print("Version information not found.")
-            return None
-    else:
-        print(f"Gagal mengakses halaman. Status code: {response.status_code}")
+        
+        print("Version information for Mac not found.")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching the version: {e}")
         return None
 
 # Fungsi untuk membaca versi dari file CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
     
-    # Jika file tidak ada, buat file baru dengan nilai default
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Go", "1.20.0", ""])  # Default Go version
+            writer.writerow(["Webex Mac", "44.9.0", ""])  # Ganti dengan versi yang sesuai jika perlu
     
-    # Baca file CSV
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         versions = {}
@@ -49,17 +49,14 @@ def update_web_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     
     rows = []
-    # Baca semua baris dari CSV
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     
-    # Update versi Web Version pada baris yang sesuai
     for row in rows:
         if row['Software'] == software_name:
             row['Web Version'] = new_version
     
-    # Tulis kembali file CSV dengan pembaruan
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
         writer.writeheader()
@@ -73,48 +70,43 @@ def compare_versions(mungki_version, web_version):
 def send_notification_telegram(software_name, mungki_version, web_version):
     telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
     chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"
+    if not telegram_token or not chat_id:
+        print("Telegram token atau chat ID belum diset.")
+        return
     
+    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
     params = {
         'chat_id': chat_id,
         'text': telegram_message,
-        'parse_mode': 'Markdown'  # Optional: Menggunakan Markdown untuk format pesan yang lebih baik
+        'parse_mode': 'Markdown'
     }
     
     try:
         response = requests.get(send_text_url, params=params)
+        response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
         
-        # Debugging: Cetak status code dari respon Telegram
         #print(f"Telegram response status code: {response.status_code}")
         #print(f"Telegram response text: {response.text}")
-        
-        # Cek jika respon status bukan 200, artinya ada masalah
-        if response.status_code != 200:
-            raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"Error sending notification to Telegram: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
-    # Baca semua versi saat ini dari file CSV
     versions = read_current_version_csv()
+    latest_webex_version_mac = check_latest_version_webex_mac()
     
-    # Cek versi terbaru dari Go
-    latest_go_version = check_latest_version_go()
-    go_local_version, go_web_version = versions.get('Go', (None, None))
+    if latest_webex_version_mac:
+        webex_mungki_version, webex_web_version = versions.get('Webex Mac', (None, None))
 
-    # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
-    if compare_versions(go_local_version, latest_go_version):
-        print(f"Versi baru Go tersedia: {latest_go_version}")
-        
-        # Perbarui kolom Web Version di file CSV
-        update_web_version_csv("Go", latest_go_version)
-        
-        # Kirim notifikasi ke Telegram
-        send_notification_telegram("Go", go_local_version, latest_go_version)
+        if compare_versions(webex_mungki_version, latest_webex_version_mac):
+            print(f"Versi baru Webex untuk Mac tersedia: {latest_webex_version_mac}")
+            update_web_version_csv("Webex Mac", latest_webex_version_mac)
+            send_notification_telegram("Webex Mac", webex_mungki_version, latest_webex_version_mac)
+        else:
+            print("Versi Webex untuk Mac sudah yang terbaru.")
     else:
-        print("Versi Go sudah yang terbaru.")
+        print("Tidak dapat mengambil versi terbaru untuk Mac.")
 
 if __name__ == "__main__":
     main()

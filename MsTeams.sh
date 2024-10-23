@@ -7,35 +7,33 @@ import os
 telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
 chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
 
-# Fungsi untuk mendapatkan versi terbaru Arc Browser dari halaman rilis
-url = "https://resources.arc.net/hc/en-us/articles/20498293324823-Arc-for-macOS-2024-Release-Notes"
+# Fungsi untuk mendapatkan versi terbaru Microsoft Teams dari halaman rilis
+def check_latest_version_teams():
+    url = "https://learn.microsoft.com/en-us/officeupdates/teams-app-versioning"
+    response = requests.get(url)
 
-def check_latest_version_arc():
-    try:
-        # Mengatur headers yang lebih lengkap
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive"
-        }
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Pastikan permintaan berhasil
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Cari h2 pertama yang berisi tanggal
-        h2_tag = soup.find('h2', id="october102024")  # Ganti dengan ID yang sesuai jika perlu
-        if h2_tag:
-            # Ambil versi dari elemen <p> setelah h2_tag
-            version_paragraph = h2_tag.find_next('p')
-            if version_paragraph:
-                latest_version = version_paragraph.text.strip().replace('V', '')
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Mencari semua baris dalam tabel
+        rows = soup.find_all('tr')
+        if rows:
+            # Ambil baris pertama setelah header (baris kedua)
+            first_row_data = rows[1].find_all('td')
+            if len(first_row_data) >= 4:
+                latest_version = first_row_data[2].text.strip()  # Ambil kolom ke-4 yang berisi Teams version
+                print(f"Latest Microsoft Teams version found: {latest_version}")
                 return latest_version
+            else:
+                print("Could not find the correct number of columns in the first data row.")
+        else:
+            print("No rows found in the table.")
         return None
-    except Exception as e:
-        print(f"Error occurred: {e}")
+
+    else:
+        print(f"Failed to access Microsoft Teams page. Status code: {response.status_code}")
         return None
-        
+
 # Fungsi untuk membaca versi dari file CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
@@ -44,7 +42,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Arc Browser", "0.0.0", ""])  # Nilai default jika belum ada data
+            writer.writerow(["Microsoft Teams", "0.0.0", ""])  # Nilai default jika belum ada data
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -98,17 +96,17 @@ def send_notification_telegram(software_name, mungki_version, latest_version):
 def main():
     versions = read_current_version_csv()
     
-    latest_arc_version = check_latest_version_arc()
-    arc_mungki_version, arc_web_version = versions.get('Arc Browser', (None, None))
+    latest_teams_version = check_latest_version_teams()
+    teams_mungki_version, teams_web_version = versions.get('Microsoft Teams', (None, None))
 
-    if latest_arc_version and compare_versions(arc_mungki_version, latest_arc_version):
-        print(f"New version of Arc Browser available: {latest_arc_version}")
+    if latest_teams_version and compare_versions(teams_mungki_version, latest_teams_version):
+        print(f"New version of Microsoft Teams available: {latest_teams_version}")
         
-        update_web_version_csv("Arc Browser", latest_arc_version)
+        update_web_version_csv("Microsoft Teams", latest_teams_version)
         
-        send_notification_telegram("Arc Browser", arc_mungki_version, latest_arc_version)
+        send_notification_telegram("Microsoft Teams", teams_mungki_version, latest_teams_version)
     else:
-        print("Arc Browser is up to date or could not retrieve the latest version.")
+        print("Microsoft Teams is up to date or could not retrieve the latest version.")
 
 if __name__ == "__main__":
     main()

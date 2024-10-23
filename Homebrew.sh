@@ -3,11 +3,16 @@ import csv
 import json
 import os
 
+# Token GitHub dan Telegram diambil dari environment variables
+Gtoken = "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"
+telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
+chat_id = "-4523501737"  
+
 # Fungsi untuk mendapatkan versi terbaru Homebrew menggunakan GitHub API dengan autentikasi
 def check_latest_version_homebrew():
     api_url = "https://api.github.com/repos/Homebrew/brew/releases/latest"
     headers = {
-        'Authorization': 'token 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',  # Ganti dengan token GitHub Anda
+        'Authorization': f'token {Gtoken}',  # Ganti dengan token GitHub Anda
         'Accept': 'application/vnd.github.v3+json'
     }
     response = requests.get(api_url, headers=headers)
@@ -30,7 +35,6 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Firefox", "13.0.0.1", ""])
             writer.writerow(["Homebrew", "4.3.0", ""])
     
     # Baca file CSV
@@ -69,10 +73,7 @@ def compare_versions(mungki_version, web_version):
 
 # Fungsi untuk mengirim notifikasi ke Telegram
 def send_notification_telegram(software_name, mungki_version, web_version):
-    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
-    chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}!\nCurrent version: {mungki_version}\nLatest version: {web_version}"
-    
+    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"  
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
     params = {
         'chat_id': chat_id,

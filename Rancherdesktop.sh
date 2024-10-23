@@ -2,40 +2,37 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import os
+import re
 
 # Token Telegram dan chat ID
 telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
 chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
 
-# Fungsi untuk mendapatkan versi terbaru Arc Browser dari halaman rilis
-url = "https://resources.arc.net/hc/en-us/articles/20498293324823-Arc-for-macOS-2024-Release-Notes"
+# Fungsi untuk mendapatkan versi terbaru Rancher Desktop dari halaman rilis
+def check_latest_version_rancher_desktop():
+    url = "https://github.com/rancher-sandbox/rancher-desktop/releases"  # URL halaman rilis Rancher Desktop
+    response = requests.get(url)
 
-def check_latest_version_arc():
-    try:
-        # Mengatur headers yang lebih lengkap
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive"
-        }
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Pastikan permintaan berhasil
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Cari h2 pertama yang berisi tanggal
-        h2_tag = soup.find('h2', id="october102024")  # Ganti dengan ID yang sesuai jika perlu
-        if h2_tag:
-            # Ambil versi dari elemen <p> setelah h2_tag
-            version_paragraph = h2_tag.find_next('p')
-            if version_paragraph:
-                latest_version = version_paragraph.text.strip().replace('V', '')
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Mencari elemen yang mengandung informasi versi
+        version_tag = soup.find('a', class_='Link--primary', href=True)  # Mengambil link versi terbaru
+        if version_tag:
+            # Menggunakan regex untuk mengekstrak versi dalam format yang benar
+            version_match = re.search(r'\d+\.\d+\.\d+', version_tag.text.strip())
+            if version_match:
+                latest_version = version_match.group(0)  # Mengambil versi yang cocok
+                #print(f"Latest Rancher Desktop version found: {latest_version}")
                 return latest_version
+
+        print("Could not find the latest version information for Rancher Desktop.")
         return None
-    except Exception as e:
-        print(f"Error occurred: {e}")
+
+    else:
+        print(f"Failed to access Rancher Desktop page. Status code: {response.status_code}")
         return None
-        
+
 # Fungsi untuk membaca versi dari file CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
@@ -44,7 +41,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["Arc Browser", "0.0.0", ""])  # Nilai default jika belum ada data
+            writer.writerow(["Rancher Desktop", "0.0.0", ""])  # Nilai default jika belum ada data
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -89,6 +86,9 @@ def send_notification_telegram(software_name, mungki_version, latest_version):
     
     try:
         response = requests.get(send_text_url, params=params)
+       # print(f"Telegram response status code: {response.status_code}")
+       # print(f"Telegram response text: {response.text}")
+        
         if response.status_code != 200:
             raise ValueError(f"Error {response.status_code}, response: {response.text}")
     except Exception as e:
@@ -98,17 +98,17 @@ def send_notification_telegram(software_name, mungki_version, latest_version):
 def main():
     versions = read_current_version_csv()
     
-    latest_arc_version = check_latest_version_arc()
-    arc_mungki_version, arc_web_version = versions.get('Arc Browser', (None, None))
+    latest_rancher_version = check_latest_version_rancher_desktop()
+    rancher_mungki_version, rancher_web_version = versions.get('Rancher Desktop', (None, None))
 
-    if latest_arc_version and compare_versions(arc_mungki_version, latest_arc_version):
-        print(f"New version of Arc Browser available: {latest_arc_version}")
+    if latest_rancher_version and compare_versions(rancher_mungki_version, latest_rancher_version):
+        print(f"New version of Rancher Desktop available: {latest_rancher_version}")
         
-        update_web_version_csv("Arc Browser", latest_arc_version)
+        update_web_version_csv("Rancher Desktop", latest_rancher_version)
         
-        send_notification_telegram("Arc Browser", arc_mungki_version, latest_arc_version)
+        send_notification_telegram("Rancher Desktop", rancher_mungki_version, latest_rancher_version)
     else:
-        print("Arc Browser is up to date or could not retrieve the latest version.")
+        print("Rancher Desktop is up to date or could not retrieve the latest version.")
 
 if __name__ == "__main__":
     main()

@@ -1,31 +1,28 @@
 import requests
-from bs4 import BeautifulSoup
-import csv
-import json
+import re
 import os
+import csv
+from bs4 import BeautifulSoup
 
-# Fungsi untuk mendapatkan versi terbaru DBeaver dari halaman HTML
-def check_latest_version_dbeaver():
-    url = "https://github.com/dbeaver/dbeaver/releases"
+# Fungsi untuk mendapatkan versi terbaru Notion dari halaman release notes
+def check_latest_version_notion():
+    url = "https://www.notion.so/desktop"
+
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
-        
+        response.raise_for_status()  # Pastikan responsnya sukses
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Temukan elemen <a> yang berisi versi terbaru
-        version_element = soup.find('a', {'class': 'Link--primary Link'})
-        latest_version = None
-        
-        if version_element:
-            latest_version = version_element.get_text(strip=True)
-            #print(f"Latest DBeaver version found: {latest_version}")
+
+        # Cari elemen yang berisi informasi versi terbaru
+        version_tag = soup.find('div', class_='version')  # Sesuaikan dengan class atau tag yang relevan
+        if version_tag:
+            latest_version = version_tag.text.strip()  # Mengambil teks dan menghapus spasi
             return latest_version
-        
-        print("Version information not found.")
-        return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching the version: {e}")
+        else:
+            print("No version information found for Notion.")
+            return None
+    except Exception as e:
+        print(f"Error fetching version information for Notion: {e}")
         return None
 
 # Fungsi untuk membaca versi dari file CSV
@@ -36,7 +33,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
-            writer.writerow(["DBeaver Community", "21.0.0", ""])  # Ganti dengan versi yang sesuai jika perlu
+            writer.writerow(["Notion", "None", ""])  # Ganti dengan versi yang sesuai jika perlu
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -70,8 +67,9 @@ def compare_versions(mungki_version, web_version):
 
 # Fungsi untuk mengirim notifikasi ke Telegram
 def send_notification_telegram(software_name, mungki_version, web_version):
-    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM" # Gunakan variabel lingkungan untuk token
-    chat_id = "-4523501737" # Gunakan variabel lingkungan untuk chat ID
+    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Gunakan variabel lingkungan untuk token
+    chat_id = "-4523501737"  # Gunakan variabel lingkungan untuk chat ID
+  
     if not telegram_token or not chat_id:
         print("Telegram token atau chat ID belum diset.")
         return
@@ -87,28 +85,25 @@ def send_notification_telegram(software_name, mungki_version, web_version):
     try:
         response = requests.get(send_text_url, params=params)
         response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
-        
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
     except requests.exceptions.RequestException as e:
         print(f"Error sending notification to Telegram: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
     versions = read_current_version_csv()
-    latest_dbeaver_version = check_latest_version_dbeaver()
+    latest_notion_version = check_latest_version_notion()
     
-    if latest_dbeaver_version:
-        dbeaver_mungki_version, dbeaver_web_version = versions.get('DBeaver Community', (None, None))
+    if latest_notion_version:
+        notion_mungki_version, notion_web_version = versions.get('Notion', (None, None))
 
-        if compare_versions(dbeaver_mungki_version, latest_dbeaver_version):
-            print(f"Versi baru DBeaver Community tersedia: {latest_dbeaver_version}")
-            update_web_version_csv("DBeaver Community", latest_dbeaver_version)
-            send_notification_telegram("DBeaver Community", dbeaver_mungki_version, latest_dbeaver_version)
+        if compare_versions(notion_mungki_version, latest_notion_version):
+            print(f"Versi baru Notion tersedia: {latest_notion_version}")
+            update_web_version_csv("Notion", latest_notion_version)
+            send_notification_telegram("Notion", notion_mungki_version, latest_notion_version)
         else:
-            print("Versi DBeaver sudah yang terbaru.")
+            print("Versi Notion sudah yang terbaru.")
     else:
-        print("Tidak dapat mengambil versi terbaru.")
+        print("Tidak dapat mengambil versi terbaru Notion.")
 
 if __name__ == "__main__":
     main()

@@ -2,11 +2,16 @@ import requests
 import csv
 import os
 
+# Token GitHub dan Telegram diambil langsung dari script
+Gtoken = "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"
+telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
+chat_id = "-4523501737"  # Chat ID untuk Telegram
+
 # Fungsi untuk mendapatkan versi terbaru Amazon Q menggunakan GitHub API dengan autentikasi
 def check_latest_version_amazon_q():
     api_url = "https://api.github.com/repos/amazon/amazon-q/releases/latest"  # Ganti URL sesuai repositori Amazon Q
     headers = {
-        'Authorization': 'token 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', # Ambil token GitHub dari environment variables
+        'Authorization': f'token {Gtoken}', # Ambil token GitHub dari environment variables
         'Accept': 'application/vnd.github.v3+json'
     }
     response = requests.get(api_url, headers=headers)
@@ -82,8 +87,8 @@ def send_notification_telegram(software_name, mungki_version, web_version):
         response = requests.get(send_text_url, params=params)
         
         # Debugging: Cetak status code dari respon Telegram
-        print(f"Telegram response status code: {response.status_code}")
-        print(f"Telegram response text: {response.text}")
+        #print(f"Telegram response status code: {response.status_code}")
+        #print(f"Telegram response text: {response.text}")
         
         # Cek jika respon status bukan 200, artinya ada masalah
         if response.status_code != 200:
