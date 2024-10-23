@@ -68,7 +68,7 @@ def update_web_version_csv(software_name, new_version):
         writer.writeheader()
         writer.writerows(rows)
 
-# Fungsi untuk membandingkan versi
+# Fungsi untuk membandingkan versi baru nnn
 def compare_versions(mungki_version, web_version):
     return mungki_version != web_version
 
