@@ -1,42 +1,43 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import json
 import os
 
-def check_latest_version_balsamiq():
-    url = "https://balsamiq.com/wireframes/desktop/release-notes/"
+# Fungsi untuk mendapatkan versi terbaru dari URL dinamis
+def check_latest_version(software_name, url, version_identifier, version_find_function):
     response = requests.get(url)
-
+    
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Temukan elemen utama yang berisi konten rilis
-        main_content = soup.find('div', {'id': 'main-content'})
         
-        if main_content:
-            # Cari elemen <h3> yang memiliki tanggal rilis, versi di ul setelahnya
-            latest_release = main_content.find('h3')
-            if latest_release:
-                release_date = latest_release.get_text(strip=True)
-                version_list = latest_release.find_next('ul').find_all('li')
-
-                # Ambil versi dari elemen <li> yang ditemukan
-                for li in version_list:
-                    text = li.get_text(strip=True)
-                    # Periksa jika versi adalah 4.7.5
-                    if '4.7.5' in text:
-                        print(f"Latest Balsamiq version found: 4.7.5")
-                        return '4.7.5'
-
-            print("Version 4.7.5 not found.")
-            return None
+        # Cari versi berdasarkan fungsi pencarian yang diberikan
+        latest_version = version_find_function(soup, version_identifier)
+        
+        if latest_version:
+            print(f"Latest {software_name} version found: {latest_version}")
+            return latest_version
         else:
-            print("Main content not found.")
+            print(f"{software_name} version not found.")
             return None
     else:
-        print(f"Gagal mengakses halaman. Status code: {response.status_code}")
-        return None# Fungsi untuk membaca versi dari file CSV
+        print(f"Gagal mengakses halaman untuk {software_name}. Status code: {response.status_code}")
+        return None
+
+# Fungsi pencarian versi untuk Balsamiq
+def find_balsamiq_version(soup, version_identifier):
+    main_content = soup.find('div', {'id': 'main-content'})
+    
+    if main_content:
+        latest_release = main_content.find('h3')
+        if latest_release:
+            version_list = latest_release.find_next('ul').find_all('li')
+            for li in version_list:
+                text = li.get_text(strip=True)
+                if version_identifier in text:
+                    return version_identifier
+    return None
+
+# Fungsi untuk membaca versi dari file CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
     
@@ -46,7 +47,6 @@ def read_current_version_csv():
             writer = csv.writer(file)
             writer.writerow(["Software", "Mungki Version", "Web Version"])
             writer.writerow(["balsamiq", "1.1.1", ""])
-
     
     # Baca file CSV
     with open(filename, 'r') as file:
@@ -92,17 +92,11 @@ def send_notification_telegram(software_name, mungki_version, web_version):
     params = {
         'chat_id': chat_id,
         'text': telegram_message,
-        'parse_mode': 'Markdown'  # Optional: Menggunakan Markdown untuk format pesan yang lebih baik
+        'parse_mode': 'Markdown'
     }
     
     try:
         response = requests.get(send_text_url, params=params)
-        
-        # Debugging: Cetak status code dari respon Telegram
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
-        
-        # Cek jika respon status bukan 200, artinya ada masalah
         if response.status_code != 200:
             raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
     except Exception as e:
@@ -113,8 +107,9 @@ def main():
     # Baca semua versi saat ini dari file CSV
     versions = read_current_version_csv()
     
-    # Cek versi terbaru dari balsamiq
-    latest_balsamiq_version = check_latest_version_balsamiq()
+    # Cek versi terbaru dari balsamiq dengan menggunakan fungsi dinamis
+    balsamiq_url = "https://balsamiq.com/wireframes/desktop/release-notes/"
+    latest_balsamiq_version = check_latest_version('Balsamiq', balsamiq_url, '4.8.0', find_balsamiq_version)
     balsamiq_mungki_version, balsamiq_web_version = versions.get('balsamiq', (None, None))
 
     # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
@@ -124,7 +119,7 @@ def main():
         # Perbarui kolom Web Version di file CSV
         update_web_version_csv("balsamiq", latest_balsamiq_version)
         
-        # Kirim notifikasi ke Slack
+        # Kirim notifikasi ke Telegram
         send_notification_telegram("balsamiq", balsamiq_mungki_version, latest_balsamiq_version)
     else:
         print("Versi Balsamiq sudah yang terbaru.")
