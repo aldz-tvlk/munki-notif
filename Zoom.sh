@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -9,176 +8,152 @@ import os
 import time
 import subprocess
 
-# Ganti dengan token bot Telegram dan chat ID yang sesuai
-TELEGRAM_TOKEN = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
-CHAT_ID = "-4523501737"  # Ganti dengan chat ID yang sesuai
-
 # Fungsi untuk mendapatkan versi terbaru Zoom dari halaman download
 def check_latest_version_zoom():
     url = "https://zoom.us/download"
-    
-    # Set up Selenium WebDriver (Chrome in headless mode)
+
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run browser in headless mode
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Make sure to specify the correct path to your chromedriver
-    service = Service('/opt/homebrew/bin/chromedriver')  # Replace with your path to ChromeDriver
-    
+
+    service = Service('/opt/homebrew/bin/chromedriver')  # Sesuaikan path chromedriver
+
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(url)
-        time.sleep(3)  # Allow time for the page to load
+        time.sleep(3)
 
-        # Look for the element that contains the version information
         version_element = driver.find_element(By.CLASS_NAME, "version-detail")
-        latest_version = None
-        
-        if version_element:
-            # Extract and clean up the version string
-            latest_version = version_element.text.strip()
-            #print(f"Latest Zoom version found: {latest_version}")
-            driver.quit()
-            return latest_version
-        
-        print("Version information not found.")
+        latest_version = version_element.text.strip() if version_element else None
         driver.quit()
-        return None
+        return latest_version
     except Exception as e:
         print(f"Error fetching the version: {e}")
         return None
-# Fungsi untuk membaca versi dari file CSV
+
+# Baca versi dari CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
-    
+
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Munki Version", "Web Version"])
-            writer.writerow(["Zoom", "1.0.0", ""])  # Ganti dengan versi yang sesuai jika perlu
-    
+            writer.writerow(["Zoom", "0.0.0", ""])
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
-        versions = {}
-        for row in reader:
-            versions[row['Software']] = (row['Munki Version'], row['Web Version'])
-    
-    return versions
+        return {row['Software']: (row['Munki Version'], row['Web Version']) for row in reader}
 
-# Fungsi untuk memperbarui kolom Web Version di file CSV
+# Perbarui Web Version di CSV
 def update_web_version_csv(software_name, new_version):
     filename = 'current_version.csv'
-    
     rows = []
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
-    
+
     for row in rows:
         if row['Software'] == software_name:
             row['Web Version'] = new_version
-    
+
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
-# Fungsi untuk memperbarui kolom Munki Version di file CSV
+# Perbarui Munki Version di CSV
 def update_munki_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     rows = []
-    # Baca semua baris dari CSV
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
-    
-    # Update versi Munki Version pada baris yang sesuai
+
     for row in rows:
         if row['Software'] == software_name:
             row['Munki Version'] = new_version
-    
-    # Tulis kembali file CSV dengan pembaruan
+
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
-# Fungsi untuk membandingkan versi
-def compare_versions(Munki_version, web_version):
-    return Munki_version != web_version
+# Bandingkan versi Munki dan versi terbaru
+def compare_versions(munki_version, web_version):
+    return munki_version != web_version
 
-# Jalankan autopkg untuk download dan import ke Munki
+# Jalankan autopkg untuk Apple Silicon dan Intel
 def run_autopkg():
     success = True
     failed_archs = []
 
     try:
-        # Jalankan untuk Apple Silicon (arm64)
         subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.zoom"], check=True)
-        print("Autopkg berhasil dijalankan untuk Apple Silicon (arm64).")
+        print("Autopkg berhasil untuk Apple Silicon.")
     except subprocess.CalledProcessError:
-        print("Autopkg gagal untuk Apple Silicon (arm64).")
+        print("Autopkg gagal untuk Apple Silicon.")
         success = False
-        failed_archs.append("Apple Silicon (arm64)")
-    
-    try:
-        # Jalankan untuk Intel (x86_64)
-        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.zoomx86"], check=True)
-        print("Autopkg berhasil dijalankan untuk Intel (x86_64).")
-    except subprocess.CalledProcessError:
-        print("Autopkg gagal untuk Intel (x86_64).")
-        success = False
-        failed_archs.append("Intel (x86_64)")
+        failed_archs.append("Apple Silicon")
 
-    # Kirim notifikasi jika ada yang gagal
+    try:
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.zoomx86"], check=True)
+        print("Autopkg berhasil untuk Intel.")
+    except subprocess.CalledProcessError:
+        print("Autopkg gagal untuk Intel.")
+        success = False
+        failed_archs.append("Intel")
+
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("Zoom", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("Zoom", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
 
     return success
 
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, Munki_version, web_version):
-    telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Munki version: {Munki_version}\n"
-                        f"Latest version: {web_version}\n"
-                        f"Zoom is Already Import to MunkiAdmin")
-    send_text_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    params = {
-        'chat_id': CHAT_ID,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'
+# Kirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/xxx-xxx-xxx"  # Ganti dengan Webhook URL Lark kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
-    try:
-        response = requests.get(send_text_url, params=params)
-        response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
-        
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending notification to Telegram: {e}")
 
-# Proses utama untuk mengecek versi dan memperbarui jika diperlukan
+    try:
+        response = requests.post(webhook_url, headers=headers, json=message)
+        if response.status_code != 200:
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
+    except Exception as e:
+        print(f"Error sending notification to Lark: {e}")
+
+# Proses utama
 def main():
     versions = read_current_version_csv()
-    latest_zoom_version = check_latest_version_zoom()
-    
-    if latest_zoom_version:
-        zoom_Munki_version, zoom_web_version = versions.get('Zoom', (None, None))
+    latest_version = check_latest_version_zoom()
 
-        if compare_versions(zoom_Munki_version, latest_zoom_version):
-            print(f"Versi baru Zoom tersedia: {latest_zoom_version}")
-            update_web_version_csv("Zoom", latest_zoom_version)
-            # Jalankan autopkg
+    if latest_version:
+        munki_version, _ = versions.get("Zoom", ("0.0.0", ""))
+
+        if compare_versions(munki_version, latest_version):
+            print(f"New version of Android Studio is available: {latest_version}")
+            update_web_version_csv("Zoom", latest_version)
             run_autopkg()
-            update_munki_version_csv("Zoom", latest_zoom_version)
-            send_notification_telegram("Zoom", zoom_Munki_version, latest_zoom_version)
+            update_munki_version_csv("Zoom", latest_version)
+            send_notification_lark("Zoom", munki_version, latest_version)
         else:
-            print("Version Zoom sudah yang terbaru.")
+            print("The version of Android Studio is already up to date.")
     else:
-        print("Tidak dapat mengambil versi terbaru.")
+        print("The version of Android Studio is already up to date.")
 
 if __name__ == "__main__":
     main()
