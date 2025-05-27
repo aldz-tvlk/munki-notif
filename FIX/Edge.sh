@@ -125,7 +125,6 @@ def send_notification_lark(software_name, munki_version, latest_version):
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
     versions = read_current_version_csv()
-    
     latest_edge_version = check_latest_version_edge()
     edge_munki_version, edge_web_version = versions.get('Microsoft Edge', (None, None))
 
