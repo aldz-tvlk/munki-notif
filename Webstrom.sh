@@ -143,8 +143,8 @@ def send_notification_lark(software_name, munki_version, latest_version):
         "content": {
             "text": (
                 f"🚨 Update Available for {software_name}!\n"
-                f"Munki version: {munki_version}\n"
-                f"New version  : {latest_version}\n"
+                f"Munki version : {munki_version}\n"
+                f"New version   : {latest_version}\n"
                 f"✅ {software_name} has been imported into MunkiAdmin."
             )
         }
