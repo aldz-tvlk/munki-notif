@@ -130,38 +130,31 @@ def run_autopkg():
     # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("WebStorm", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("WebStorm", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
 
     return success
 
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, Munki_version, web_version):
-    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM" # Gunakan variabel lingkungan untuk token
-    chat_id = "-4523501737" # Gunakan variabel lingkungan untuk chat ID
-  
-    if not telegram_token or not chat_id:
-        print("Telegram token atau chat ID belum diset.")
-        return
-
-    telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Munki version: {Munki_version}\n"
-                        f"Latest version: {web_version}\n"
-                        f"WebStorm is Already Import to MunkiAdmin")    
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'
+# Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
-        response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
-        
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending notification to Telegram: {e}")
+        response = requests.post(webhook_url, headers=headers, json=message)
+        if response.status_code != 200:
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
+    except Exception as e:
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
@@ -172,17 +165,17 @@ def main():
         webstorm_Munki_version, webstorm_web_version = versions.get('WebStorm', (None, None))
 
         if compare_versions(webstorm_Munki_version, latest_webstorm_version):
-            print(f"Version baru WebStorm tersedia: {latest_webstorm_version}")
+            print(f"New version of WebStorm is available: {latest_webstorm_version}")
             update_web_version_csv("WebStorm", latest_webstorm_version)
             # Jalankan autopkg
             run_autopkg()
             # Perbarui kolom Munki Version di file CSV
             update_munki_version_csv("WebStorm", latest_webstorm_version)
-            send_notification_telegram("WebStorm", webstorm_Munki_version, latest_webstorm_version)
+            send_notification_lark("WebStorm", webstorm_Munki_version, latest_webstorm_version)
         else:
-            print("Version WebStorm sudah yang terbaru.")
+            print("The version of WebStorm is already up to date.")
     else:
-        print("Tidak dapat mengambil versi terbaru.")
+        print("The version of WebStorm is already up to date.")
 
 if __name__ == "__main__":
     main()
