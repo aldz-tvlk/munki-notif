@@ -1,47 +1,39 @@
 import requests
 import csv
-import json
 import os
 import subprocess
 
-# Token Github
-Gtoken = "x"
-
-# Fungsi untuk mendapatkan versi terbaru PDF Sam menggunakan GitHub API dengan autentikasi
+# Fungsi untuk mendapatkan versi terbaru Appium Inspector dari GitHub
 def check_latest_version_appium():
-    api_url = "https://api.github.com/repos/appium/appium-inspector/releases/latest"
+    url = "https://api.github.com/repos/appium/appium-inspector/releases/latest"
     headers = {
-        'Authorization': f'token {Gtoken}',  # Ganti dengan token GitHub Anda
-        'Accept': 'application/vnd.github.v3+json'
+        "Accept": "application/vnd.github+json",
+        "Authorization": "Bearer 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"  # Ganti dengan token GitHub kamu
     }
-    response = requests.get(api_url, headers=headers)
+
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         data = response.json()
-        latest_version = data['tag_name']  # Mengambil versi terbaru dari tag_name
-       # print(f"Latest Appium Inspector version found: {latest_version}")
-        return latest_version
+        tag = data.get("tag_name", "")
+        return tag.lstrip("v")
     else:
-        print(f"Gagal mengakses API GitHub Appium Inspector. Status code: {response.status_code}")
+        print(f"Gagal mendapatkan versi dari GitHub. Status code: {response.status_code}")
         return None
 
 # Fungsi untuk membaca versi dari file CSV
 def read_current_version_csv():
     filename = 'current_version.csv'
     
-    # Jika file tidak ada, buat file baru dengan nilai default
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Munki Version", "Web Version"])
-            writer.writerow(["Appium Inspector", "4.3.0", ""])
+            writer.writerow(["Appium Inspector", "0.0.0", ""])
     
-    # Baca file CSV
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
-        versions = {}
-        for row in reader:
-            versions[row['Software']] = (row['Munki Version'], row['Web Version'])
+        versions = {row['Software']: (row['Munki Version'], row['Web Version']) for row in reader}
     
     return versions
 
@@ -49,15 +41,15 @@ def read_current_version_csv():
 def update_web_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     rows = []
-    # Baca semua baris dari CSV
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
-    # Update versi Web Version pada baris yang sesuai
+    
     for row in rows:
         if row['Software'] == software_name:
             row['Web Version'] = new_version
-    # Tulis kembali file CSV dengan pembaruan
+    
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
@@ -67,102 +59,87 @@ def update_web_version_csv(software_name, new_version):
 def update_munki_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     rows = []
-    # Baca semua baris dari CSV
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     
-    # Update versi Munki Version pada baris yang sesuai
     for row in rows:
         if row['Software'] == software_name:
             row['Munki Version'] = new_version
     
-    # Tulis kembali file CSV dengan pembaruan
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Fungsi untuk membandingkan versi
-def compare_versions(munki_version, web_version):
-    return munki_version != web_version
+def compare_versions(munki_version, latest_version):
+    return munki_version != latest_version
 
-# Jalankan autopkg untuk download dan import ke Munki (Apple Silicon & Intel)
+# Jalankan autopkg untuk download dan import ke Munki
 def run_autopkg():
     success = True
     failed_archs = []
 
     try:
-        # Jalankan untuk Apple Silicon (arm64)
         subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.Appium-Inspector"], check=True)
-        print("Autopkg berhasil dijalankan untuk Apple Silicon (arm64).")
+        print("Autopkg berhasil dijalankan.")
     except subprocess.CalledProcessError:
-        print("Autopkg gagal untuk Apple Silicon (arm64).")
+        print("Autopkg gagal dijalankan.")
         success = False
-        failed_archs.append("Apple Silicon (arm64)")
+        failed_archs.append("Appium Inspector MAC")
 
     try:
-        # Jalankan untuk Intel (x86_64)
         subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.Appium-Inspectorx86"], check=True)
-        print("Autopkg berhasil dijalankan untuk Intel (x86_64).")
+        print("Autopkg berhasil untuk Intel (x86_64).")
     except subprocess.CalledProcessError:
         print("Autopkg gagal untuk Intel (x86_64).")
         success = False
-        failed_archs.append("Intel (x86_64)")
+        failed_archs.append("Appium Inspector Intel")
 
-    # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("Appium Inspector", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("Appium Inspector", "Failed Import", f"Autopkg gagal:\n{failed_msg}")
 
     return success
 
-## Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, munki_version, web_version):
-    telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
-    chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-    telegram_message = f"Update Available for {software_name}\nMunki version: {munki_version}\nLatest version: {web_version}\nAppium Inspector is Already Import to MunkiAdmin"
-    
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'  # Optional: Menggunakan Markdown untuk format pesan yang lebih baik
+# 🔔 Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/xxxx-xxxx"  # Ganti dengan Webhook Lark kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
-        # Cek jika respon status bukan 200, artinya ada masalah
+        response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
-            raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
     except Exception as e:
-        print(f"Error sending notification to Telegram: {e}")
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
-    # Baca semua versi saat ini dari file CSV
     versions = read_current_version_csv()
-    # Cek versi terbaru dari Appium
-    latest_appium_version = check_latest_version_appium()
-    appium_munki_version, appium_web_version = versions.get('Appium Inspector', (None, None))
+    latest_version = check_latest_version_appium()
+    munki_version, web_version = versions.get('Appium Inspector', (None, None))
 
-    # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
-    if compare_versions(appium_munki_version, latest_appium_version):
-        print(f"New version of Appium Inspector available: {latest_appium_version}")
-        
-        # Perbarui kolom Web Version di file CSV
-        update_web_version_csv("Appium Inspector", latest_appium_version)
-
-        # Jalankan autopkg
+    if latest_version and compare_versions(munki_version, latest_version):
+        print(f"New version of Android Studio is available: {latest_version}")
+        update_web_version_csv("Appium Inspector", latest_version)
         run_autopkg()
-        
-        # Perbarui kolom Munki Version di file CSV
-        update_munki_version_csv("Appium Inspector", latest_appium_version)
-
-        # Kirim notifikasi ke Slack
-        send_notification_telegram("Appium Inspector", appium_munki_version, latest_appium_version)
+        update_munki_version_csv("Appium Inspector", latest_version)
+        send_notification_lark("Appium Inspector", munki_version, latest_version)
     else:
-        print("Version Appium Inspector sudah yang terbaru.")
+        print("The version of Android Studio is already up to date.")
 
 if __name__ == "__main__":
     main()
