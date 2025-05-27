@@ -5,7 +5,7 @@ import os
 import subprocess
 
 # Token Github
-Gtoken = "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"
+Gtoken = "x"
 
 # Fungsi untuk mendapatkan versi terbaru PDF Sam menggunakan GitHub API dengan autentikasi
 def check_latest_version_appium():
