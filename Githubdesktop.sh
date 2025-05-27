@@ -82,7 +82,7 @@ def send_notification_lark(software_name, Munki_version, web_version):
         "content": {
             "text": (
                 f"🔔 *Update Available: {software_name}*\n"
-                f"Munki Version: {munki_version}\n"
+                f"Munki Version: {Munki_version}\n"
                 f"Latest Version: {web_version}\n"
                 f"GitHub Desktop has been imported into MunkiAdmin."
             )
