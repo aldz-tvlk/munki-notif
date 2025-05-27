@@ -39,12 +39,12 @@ def read_current_version_csv():
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Software", "Mungki Version", "Web Version"])
+            writer.writerow(["Software", "Munki Version", "Web Version"])
             writer.writerow(["Spotify", "1.0.0", ""])  # Nilai default jika belum ada data
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
-        versions = {row['Software']: (row['Mungki Version'], row['Web Version']) for row in reader}
+        versions = {row['Software']: (row['Munki Version'], row['Web Version']) for row in reader}
     
     return versions
 
@@ -62,18 +62,18 @@ def update_web_version_csv(software_name, new_version):
             row['Web Version'] = new_version
     
     with open(filename, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Fungsi untuk membandingkan versi
-def compare_versions(mungki_version, latest_version):
-    return mungki_version != latest_version
+def compare_versions(Munki_version, latest_version):
+    return Munki_version != latest_version
 
 # Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, mungki_version, latest_version):
+def send_notification_telegram(software_name, Munki_version, latest_version):
     telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Current version: {mungki_version}\n"
+                        f"Current version: {Munki_version}\n"
                         f"Latest version: {latest_version}")
     
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
@@ -98,14 +98,14 @@ def main():
     versions = read_current_version_csv()
     
     latest_spotify_version = check_latest_version_spotify()
-    spotify_mungki_version, spotify_web_version = versions.get('Spotify', (None, None))
+    spotify_Munki_version, spotify_web_version = versions.get('Spotify', (None, None))
 
-    if compare_versions(spotify_mungki_version, latest_spotify_version):
+    if compare_versions(spotify_Munki_version, latest_spotify_version):
         print(f"New version of Spotify available: {latest_spotify_version}")
         
         update_web_version_csv("Spotify", latest_spotify_version)
         
-        send_notification_telegram("Spotify", spotify_mungki_version, latest_spotify_version)
+        send_notification_telegram("Spotify", spotify_Munki_version, latest_spotify_version)
     else:
         print("Spotify is up to date.")
 
