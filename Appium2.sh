@@ -4,9 +4,9 @@ import os
 import subprocess
 
 # Konfigurasi
-GITHUB_TOKEN = "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"
-TELEGRAM_TOKEN = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-CHAT_ID = "-4523501737"
+GITHUB_TOKEN = "s"
+TELEGRAM_TOKEN = "s:s"
+CHAT_ID = "-s"
 CSV_FILE = 'current_version.csv'
 
 # Cek versi terbaru dari GitHub
