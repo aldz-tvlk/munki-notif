@@ -4,9 +4,9 @@ import os
 import subprocess
 
 # Token GitHub dan Telegram diambil langsung dari script
-Gtoken = "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"
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  # Chat ID untuk Telegram
+Gtoken = "x"
+telegram_token = "x"
+chat_id = "-x"  # Chat ID untuk Telegram
 
 # Fungsi untuk mendapatkan versi terbaru Amazon Q menggunakan GitHub API dengan autentikasi
 def check_latest_version_amazon_q():
