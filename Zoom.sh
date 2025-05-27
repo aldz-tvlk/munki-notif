@@ -115,7 +115,7 @@ def run_autopkg():
 
 # Kirim notifikasi ke Lark
 def send_notification_lark(software_name, munki_version, latest_version):
-    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/xxx-xxx-xxx"  # Ganti dengan Webhook URL Lark kamu
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan Webhook URL Lark kamu
     headers = {"Content-Type": "application/json"}
     message = {
         "msg_type": "text",
@@ -128,7 +128,6 @@ def send_notification_lark(software_name, munki_version, latest_version):
             )
         }
     }
-
     try:
         response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
@@ -145,15 +144,15 @@ def main():
         munki_version, _ = versions.get("Zoom", ("0.0.0", ""))
 
         if compare_versions(munki_version, latest_version):
-            print(f"New version of Android Studio is available: {latest_version}")
+            print(f"New version of Zoom is available: {latest_version}")
             update_web_version_csv("Zoom", latest_version)
             run_autopkg()
             update_munki_version_csv("Zoom", latest_version)
             send_notification_lark("Zoom", munki_version, latest_version)
         else:
-            print("The version of Android Studio is already up to date.")
+            print("The version of Zoom is already up to date.")
     else:
-        print("The version of Android Studio is already up to date.")
+        print("The version of Zoom is already up to date.")
 
 if __name__ == "__main__":
     main()
