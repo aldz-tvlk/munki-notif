@@ -94,12 +94,7 @@ def send_notification_telegram(software_name, mungki_version, web_version):
     }
     
     try:
-        response = requests.get(send_text_url, params=params)
-        
-        # Debugging: Cetak status code dari respon Telegram
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
-        
+        response = requests.get(send_text_url, params=params)        
         # Cek jika respon status bukan 200, artinya ada masalah
         if response.status_code != 200:
             raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
