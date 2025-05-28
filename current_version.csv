@@ -41,7 +41,7 @@ Lark Suite,7.37.6,7.37.6
 LastPass,4.125.0,4.132.1
 Microsoft Edge,136.0.3240.92,136.0.3240.92
 Microsoft Office 365,16.89.24091630,16.90.24101387
-Microsoft Remote Desktop,11.1.4,11.1.4
+Microsoft Remote Desktop,11.1.6,11.1.6
 Microsoft Teams,25093.2105.3614.8220,25093.2105.3614.8220
 Mockoon,v9.2.0,v9.2.0
 MongoDB Compass,1.46.2,1.46.2
@@ -69,7 +69,8 @@ SwiftFormat for Xcode,,
 Tableau Desktop,2025.1.2,2025.1.2
 Tableau Prep Builder,2025.1.2,2025.1.2
 Visual Studio Code,1.100.2,1.100.2
-Vysor,v5.0.7,v5.0.7
+Vysor,v5.0.7,
+Webex Mac,,
 WebStorm,2025.1.1,2025.1.1
 XCode,,
 Zoom,Version 6.4.10 (56141),Version 6.4.10 (56141)
