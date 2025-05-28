@@ -136,7 +136,7 @@ def main():
     latest_remote_desktop_version = check_latest_version_remote_desktop()
     remote_desktop_Munki_version, remote_desktop_web_version = versions.get('Microsoft Remote Desktop', (None, None))
     if latest_remote_desktop_version and compare_versions(remote_desktop_Munki_version, latest_remote_desktop_version):
-        print(f"New version of Microsoft Edge is available: {latest_remote_desktop_version}")
+        print(f"New version of Microsoft Remote Desktop is available: {latest_remote_desktop_version}")
         update_web_version_csv("Microsoft Remote Desktop", latest_remote_desktop_version)
         # Jalankan autopkg
         run_autopkg()
@@ -144,7 +144,7 @@ def main():
         update_munki_version_csv("Microsoft Remote Desktop", latest_remote_desktop_version)
         send_notification_lark("Microsoft Remote Desktop", remote_desktop_Munki_version, latest_remote_desktop_version)
     else:
-        print("The version of Microsoft Edge is already up to date")
+        print("The version of Microsoft Remote Desktop is already up to date")
 
 if __name__ == "__main__":
     main()
