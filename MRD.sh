@@ -4,10 +4,6 @@ import csv
 import os
 import subprocess
 
-# Token Telegram dan chat ID
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-
 # Fungsi untuk mendapatkan versi terbaru Microsoft Remote Desktop dari halaman App Store
 def check_latest_version_remote_desktop():
     url = "https://apps.apple.com/us/app/windows-app/id1295203466?mt=12"  # URL untuk halaman App Store
@@ -19,12 +15,11 @@ def check_latest_version_remote_desktop():
         # Mencari elemen yang berisi versi terbaru
         version_tag = soup.find('h4', class_='version-history__item__version-number')
         if not version_tag:
-            # Jika tidak ditemukan, coba mencari dengan p yang memiliki teks "Version"
+            # Jika tidak ditemukan, coba mencari dengan <p> yang memiliki class tertentu
             version_tag = soup.find('p', class_='whats-new__latest__version')
         
         if version_tag:
-            latest_version = version_tag.text.replace("Version ", "").strip()  # Mengambil teks dari elemen yang ditemukan
-            #print(f"Latest Microsoft Remote Desktop version found: {latest_version}")
+            latest_version = version_tag.text.replace("Version ", "").strip()  # Mengambil teks dari elemen
             return latest_version
         
         print("Could not find the version information in the page.")
@@ -109,31 +104,31 @@ def run_autopkg():
     # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("Microsoft Remote Desktop", "Failed Import", f"Autopkg gagal untuk:{failed_msg}")
+        send_notification_lark("Microsoft Remote Desktop", "Failed Import", f"Autopkg gagal untuk:{failed_msg}")
 
     return success
 
-
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, Munki_version, latest_version):
-    telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Munki Version: {Munki_version}\n"
-                        f"Latest version: {latest_version}\n"
-                        f"Microsoft Remote Desktop is Already Import to MunkiAdmin")
-
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'
+# 🔔 Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
+        response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
-            raise ValueError(f"Error {response.status_code}, response: {response.text}")
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
     except Exception as e:
-        print(f"Error sending notification to Telegram: {e}")
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
@@ -141,15 +136,15 @@ def main():
     latest_remote_desktop_version = check_latest_version_remote_desktop()
     remote_desktop_Munki_version, remote_desktop_web_version = versions.get('Microsoft Remote Desktop', (None, None))
     if latest_remote_desktop_version and compare_versions(remote_desktop_Munki_version, latest_remote_desktop_version):
-        print(f"Version baru Microsoft Remote Desktop tersedia: {latest_remote_desktop_version}")
+        print(f"New version of Microsoft Edge is available: {latest_remote_desktop_version}")
         update_web_version_csv("Microsoft Remote Desktop", latest_remote_desktop_version)
         # Jalankan autopkg
         run_autopkg()
         # Perbarui kolom Munki Version di file CSV
         update_munki_version_csv("Microsoft Remote Desktop", latest_remote_desktop_version)
-        send_notification_telegram("Microsoft Remote Desktop", remote_desktop_Munki_version, latest_remote_desktop_version)
+        send_notification_lark("Microsoft Remote Desktop", remote_desktop_Munki_version, latest_remote_desktop_version)
     else:
-        print("Version Microsoft Remote Desktop sudah yang terbaru.")
+        print("The version of Microsoft Edge is already up to date")
 
 if __name__ == "__main__":
     main()
