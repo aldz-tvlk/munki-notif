@@ -4,8 +4,6 @@ import csv
 import os
 import subprocess
 
-# Token GitHub diambil langsung dari script
-Gtoken = "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"
 # Fungsi untuk mendapatkan versi terbaru Tableau Prep Builder dari website
 def check_latest_version_tableau_prep():
     url = "https://www.tableau.com/support/releases/prep"
