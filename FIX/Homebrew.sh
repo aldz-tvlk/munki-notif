@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 # Token GitHub diambil dari environment variables
-Gtoken = "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"
+Gtoken = "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"
 
 # Fungsi untuk mendapatkan versi terbaru Homebrew menggunakan GitHub API dengan autentikasi
 def check_latest_version_homebrew():
