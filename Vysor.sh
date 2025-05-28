@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import subprocess
 
 # Token GitHub  diambil langsung dari script
-Gtoken = "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"
+Gtoken = "xxx"
 
 # Fungsi untuk mendapatkan versi terbaru Vysor menggunakan GitHub API
 def check_latest_version_vysor():
