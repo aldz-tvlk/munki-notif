@@ -3,10 +3,6 @@ from bs4 import BeautifulSoup
 import csv
 import os
 
-# Token Telegram diambil langsung dari script
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  # Chat ID untuk Telegram
-
 # Fungsi untuk mendapatkan versi terbaru Spotify dari APKMirror
 def check_latest_version_spotify():
     url = "https://www.apkmirror.com/apk/spotify-ltd/spotify/"
