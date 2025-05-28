@@ -2,11 +2,8 @@ import requests
 import csv
 import os
 import subprocess
-# Token GitHub dan Telegram
-Gtoken = "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"
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  
-
+# Token GitHub 
+Gtoken = "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"
 # Fungsi untuk mendapatkan versi terbaru Proxyman menggunakan GitHub API dengan autentikasi
 def check_latest_version_proxyman():
     api_url = "https://api.github.com/repos/ProxymanApp/Proxyman/releases/latest"
@@ -107,34 +104,31 @@ def run_autopkg():
     # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("Proxyman", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("Proxyman", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
 
     return success
 
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, Munki_version, web_version):
-    telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Munki Version: {Munki_version}\n"
-                        f"Latest version: {web_version}\n"
-                        f"Proxyman is Already Import to MunkiAdmin")    
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'  # Menggunakan Markdown untuk format pesan yang lebih baik
+# 🔔 Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
-        # Debugging: Cetak status code dari respon Telegram
-        #print(f"Telegram response status code: {response.status_code}")
-        #print(f"Telegram response text: {response.text}")
-        
-        # Cek jika respon status bukan 200, artinya ada masalah
+        response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
-            raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
     except Exception as e:
-        print(f"Error sending notification to Telegram: {e}")
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
@@ -154,8 +148,8 @@ def main():
         run_autopkg()
         # Perbarui kolom Munki Version di file CSV
         update_munki_version_csv("Proxyman", latest_proxyman_version)
-        # Kirim notifikasi ke Telegram
-        send_notification_telegram("Proxyman", proxyman_Munki_version, latest_proxyman_version)
+        # Kirim notifikasi ke lark
+        send_notification_lark("Proxyman", proxyman_Munki_version, latest_proxyman_version)
     else:
         print("Version Proxyman sudah yang terbaru.")
 
