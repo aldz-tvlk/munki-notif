@@ -3,10 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import os
-
-# Token Telegram dan chat ID langsung di-hardcode
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
+import subprocess
 
 # Fungsi untuk mendapatkan versi terbaru Skype dari halaman dukungan
 def check_latest_version_skype():
@@ -66,6 +63,23 @@ def update_web_version_csv(software_name, new_version):
     
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
+        writer.writeheader()
+        writer.writerows(rows)
+# Fungsi untuk memperbarui kolom Munki Version di file CSV
+def update_munki_version_csv(software_name, new_version):
+    filename = 'current_version.csv'
+    rows = []
+
+    with open(filename, 'r') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+    
+    for row in rows:
+        if row['Software'] == software_name:
+            row['Munki Version'] = new_version
+    
+    with open(filename, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 

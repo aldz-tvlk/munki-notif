@@ -34,14 +34,14 @@ GnuPG,2.4.6,2.4.6
 Go,go1.24.3,go1.24.3
 Google Drive,102.0.2,
 Grammarly Desktop,,
-Homebrew,4.4.24,4.4.24
+Homebrew,4.5.3,4.5.3
 IntelliJ IDEA CE,2024.3.5,2024.3.5
 iTerm2,3.5.14,3.5.14
 Lark Suite,7.37.6,7.37.6
 LastPass,4.125.0,4.132.1
 Microsoft Edge,136.0.3240.92,136.0.3240.92
 Microsoft Office 365,16.89.24091630,16.90.24101387
-Microsoft Remote Desktop,11.1.4,11.1.4
+Microsoft Remote Desktop,11.1.6,11.1.6
 Microsoft Teams,25093.2105.3614.8220,25093.2105.3614.8220
 Mockoon,v9.2.0,v9.2.0
 MongoDB Compass,1.46.2,1.46.2
@@ -53,7 +53,7 @@ PDF Sam,v5.2.8,v5.2.8
 PgAdmin 4,8.11,8.11
 PostgreSQL,,
 Postman,11.15,11.16
-Proxyman,5.19.0,5.19.0
+Proxyman,,
 PyCharm,2024.3.4,2024.3.4
 Python3,3.12.0,3.13.0
 Rakuten Viber,,
@@ -64,12 +64,13 @@ RStudio,2025.05.0+496.pro5,2025.05.0+496.pro5
 Skype,8.125.0,8.128.0.207
 Sourcetree,4.2.11,4.2.11
 Spotify,1.0.0,
-Sublime Text 4,4189,4200
+Sublime Text 4,4200,4200
 SwiftFormat for Xcode,,
 Tableau Desktop,2025.1.2,2025.1.2
 Tableau Prep Builder,2025.1.2,2025.1.2
 Visual Studio Code,1.100.2,1.100.2
 Vysor,v5.0.7,v5.0.7
+Webex Mac,,
 WebStorm,2025.1.1,2025.1.1
 XCode,,
 Zoom,Version 6.4.10 (56141),Version 6.4.10 (56141)

@@ -8,7 +8,7 @@ def check_latest_version_appium():
     url = "https://api.github.com/repos/appium/appium-inspector/releases/latest"
     headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": "Bearer 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"  # Ganti dengan token GitHub kamu
+        "Authorization": "Bearer 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"  # Ganti dengan token GitHub kamu
     }
 
     response = requests.get(url, headers=headers)

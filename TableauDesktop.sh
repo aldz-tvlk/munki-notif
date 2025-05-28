@@ -5,7 +5,7 @@ import os
 import subprocess
 
 # Token GitHub dan Telegram diambil langsung dari script
-Gtoken = "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"
+Gtoken = "xxx"
 
 # Fungsi untuk mendapatkan versi terbaru Tableau Desktop dari website
 def check_latest_version_tableau():
