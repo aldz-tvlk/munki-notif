@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 # Token GitHub diambil dari environment variables
-Gtoken = "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"
+Gtoken = "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"
 
 # Fungsi untuk mendapatkan versi terbaru Homebrew menggunakan GitHub API dengan autentikasi
 def check_latest_version_homebrew():
@@ -18,7 +18,7 @@ def check_latest_version_homebrew():
     if response.status_code == 200:
         data = response.json()
         latest_version = data['tag_name']  # Mengambil versi terbaru dari tag_name
-        print(f"Latest Homebrew version found: {latest_version}")
+        #print(f"Latest Homebrew version found: {latest_version}")
         return latest_version
     else:
         print(f"Gagal mengakses API GitHub Homebrew. Status code: {response.status_code}")
@@ -65,9 +65,47 @@ def update_web_version_csv(software_name, new_version):
         writer.writeheader()
         writer.writerows(rows)
 
+# Fungsi untuk memperbarui kolom Munki Version di file CSV
+def update_munki_version_csv(software_name, new_version):
+    filename = 'current_version.csv'
+    rows = []
+
+    with open(filename, 'r') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+    
+    for row in rows:
+        if row['Software'] == software_name:
+            row['Munki Version'] = new_version
+    
+    with open(filename, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
+        writer.writeheader()
+        writer.writerows(rows)
+
 # Fungsi untuk membandingkan versi
 def compare_versions(Munki_version, web_version):
     return Munki_version != web_version
+
+# Jalankan autopkg untuk download dan import ke Munki
+def run_autopkg():
+    success = True
+    failed_archs = []
+
+    try:
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.Homebrew"], check=True)
+        print("Autopkg berhasil dijalankan untuk Apple Silicon (arm64).")
+    except subprocess.CalledProcessError:
+        print("Autopkg gagal untuk Apple Silicon (arm64).")
+        success = False
+        failed_archs.append("Apple Silicon (arm64)")
+
+    if not success:
+        failed_msg = "\n".join(failed_archs)
+        send_notification_lark("Homebrew", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+
+    return success
+
 
 # 🔔 Fungsi untuk mengirim notifikasi ke Lark
 def send_notification_lark(software_name, munki_version, latest_version):
@@ -95,18 +133,16 @@ def send_notification_lark(software_name, munki_version, latest_version):
 def main():
     # Baca semua versi saat ini dari file CSV
     versions = read_current_version_csv()
-    
     # Cek versi terbaru dari Homebrew
     latest_homebrew_version = check_latest_version_homebrew()
     homebrew_Munki_version, homebrew_web_version = versions.get('Homebrew', (None, None))
-
     # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
     if compare_versions(homebrew_Munki_version, latest_homebrew_version):
         print(f"New version of Homebrew is available: {latest_homebrew_version}")
-        
         # Perbarui kolom Web Version di file CSV
         update_web_version_csv("Homebrew", latest_homebrew_version)
-        
+        run_autopkg()
+        update_munki_version_csv("Homebrew", latest_homebrew_version)
         # Kirim notifikasi ke Slack
         send_notification_lark("Homebrew", homebrew_Munki_version, latest_homebrew_version)
     else:
