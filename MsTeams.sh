@@ -4,10 +4,6 @@ import csv
 import os
 import subprocess
 
-# Token Telegram dan chat ID
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  # Ganti dengan chat ID yang sesuai
-
 # Fungsi untuk mendapatkan versi terbaru Microsoft Teams dari halaman rilis
 def check_latest_version_teams():
     url = "https://learn.microsoft.com/en-us/officeupdates/teams-app-versioning"
@@ -109,30 +105,31 @@ def run_autopkg():
     # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_telegram("Microsoft Teams", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("Microsoft Teams", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
 
     return success
 
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, Munki_version, latest_version):
-    telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Munki Version: {Munki_version}\n"
-                        f"Latest version: {latest_version}\n"
-                        f"Microsoft Teams is Already Import to MunkiAdmin")
-    
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'
+# 🔔 Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
+        response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
-            raise ValueError(f"Error {response.status_code}, response: {response.text}")
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
     except Exception as e:
-        print(f"Error sending notification to Telegram: {e}")
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
@@ -142,15 +139,15 @@ def main():
     teams_Munki_version, teams_web_version = versions.get('Microsoft Teams', (None, None))
 
     if latest_teams_version and compare_versions(teams_Munki_version, latest_teams_version):
-        print(f"Version baru Microsoft Teams tersedia: {latest_teams_version}")
+        print(f"New version of Microsoft Teams is available: {latest_teams_version}")
         update_web_version_csv("Microsoft Teams", latest_teams_version)
         # Jalankan autopkg
         run_autopkg()
         # Perbarui kolom Munki Version di file CSV
         update_munki_version_csv("Microsoft Teams", latest_teams_version)
-        send_notification_telegram("Microsoft Teams", teams_Munki_version, latest_teams_version)
+        send_notification_lark("Microsoft Teams", teams_Munki_version, latest_teams_version)
     else:
-        print("Version Microsoft Teams sudah yang terbaru.")
+        print("The version of Microsoft Teams is already up to date.")
 
 if __name__ == "__main__":
     main()
