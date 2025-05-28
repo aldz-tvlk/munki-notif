@@ -1,59 +1,75 @@
-Software,Mungki Version,Web Version
-Acrobat Reader,24.003.20112,24.003.20180
+Software,Munki Version,Web Version
+Acrobat Reader,25.001.20432,25.001.20432
 Amazon Q,1.4.5,
-Android Studio,2024.2.1,2024.2.1
-Appium,v2024.9.1,v2024.9.1
+Android Studio,2024.3.2,2024.3.2
+Appium Inspector,v2025.3.1,v2025.3.1
 Appium Server,2024.9.1,
+Arc Browser,,
 Asana,version 2.2.3,version 2.2.3
-balsamiq,4.7.5,4.7.5
-Burp Suite Community,2024.8.5,2024.8.5
-Google Chrome,130.0.6723.59,130.0.6723.59
-DBeaver Community,24.2.2,24.2.2
+AWS Cli v2,,
+AWS Corett0 8,,
+AWS Corett0 11,,
+AWS Corett0 17,,
+AWS Corett0 19,,
+AWS Corett0 21,,
+AWS Sam Cli,,
+AWS Session Manager Plugin,,
+balsamiq,4.7.5,4.8.0
+Blender,,
+Burp Suite Community,2025.4.4,2025.4.4
+Google Chrome,135.0.7049.84,135.0.7049.84
+DBeaver Community,25.0.5,25.0.5
+DevUtils,,
+draw.io,,
+Fig,,
 Figma,124.4.7,
-FileZilla,3.67.1,3.67.1
+FileZilla,3.69.0,3.69.0
 Firefox,131.0.2,131.0.2
+Flipper,,
+Formal,,
 Forticlient,7.4.0.1645,
 Git,2.23.0,
-GitHub Desktop,3.4.5,3.4.6
-GnuPG,2.4.5,2.4.5
-Go,go1.23.2,go1.23.2
-Google Drive,96.0,98.0
-Homebrew,4.4.0,4.4.0
-IntelliJ IDEA CE,2024.2.1,2024.2.3
-iTerm2,3.5.5,3.5.5
-Lark Suite,7.26.0.48,
+GitHub Desktop,3.4.2,3.4.20
+GnuPG,2.4.6,2.4.6
+Go,go1.24.3,go1.24.3
+Google Drive,102.0.2,
+Grammarly Desktop,,
+Homebrew,4.4.24,4.4.24
+IntelliJ IDEA CE,2024.3.5,2024.3.5
+iTerm2,3.5.14,3.5.14
+Lark Suite,7.37.6,7.37.6
 LastPass,4.125.0,4.132.1
-Microsoft Edge,127.0.2651.86,129.0.2792.89
+Microsoft Edge,136.0.3240.92,136.0.3240.92
 Microsoft Office 365,16.89.24091630,16.90.24101387
-Microsoft Remote Desktop,10.9.9,11.0.5
-Microsoft Teams,24091.212.2846.1453,24244.507.3125.3475
-Mockoon,v8.4.0,v8.4.0
-MongoDB Compass,1.43.6,1.44.5
+Microsoft Remote Desktop,11.1.4,11.1.4
+Microsoft Teams,25093.2105.3614.8220,25093.2105.3614.8220
+Mockoon,v9.2.0,v9.2.0
+MongoDB Compass,1.46.2,1.46.2
 Node JS,v22.8.0,v22.9.0
 Nord VPN,,
 NoSQL Workbench,3.13.0,3.13.0
 Notion,,
 PDF Sam,v5.2.8,v5.2.8
 PgAdmin 4,8.11,8.11
+PostgreSQL,,
 Postman,11.15,11.16
-Proxyman,5.9.0,5.9.0
-PyCharm,2024.2.0.1,2024.2.3
-Python,3.13.0,3.13.0
+Proxyman,5.19.0,5.19.0
+PyCharm,2024.3.4,2024.3.4
+Python3,3.12.0,3.13.0
 Rakuten Viber,,
-Rancher Desktop,1.16.0,1.16.0
+Rancher Desktop,1.18.2,1.18.2
 Reactotron,3.7.0,3.7.0
-RStudio,2024.04.2+764.pro1,2024.09.0+375.pro3
+Realm Studio,,
+RStudio,2025.05.0+496.pro5,2025.05.0+496.pro5
 Skype,8.125.0,8.128.0.207
-Slack,4.40.133,4.40.133
-Sourcetree,4.2.8,4.2.8
+Sourcetree,4.2.11,4.2.11
 Spotify,1.0.0,
-Sublime Text 4,4169,4180
+Sublime Text 4,4189,4200
 SwiftFormat for Xcode,,
-Tableau Desktop,2024.2.2,2024.2.3
-Tableau Prep Builder,2024.2.0,2024.2.3
-Visual Studio Code,1.94.2,1.94.2
+Tableau Desktop,2025.1.2,2025.1.2
+Tableau Prep Builder,2025.1.2,2025.1.2
+Visual Studio Code,1.100.2,1.100.2
 Vysor,v5.0.7,v5.0.7
-Webex Mac,44.9.0,44.10.0.30906
-WebStorm,Version 2024.2 (2024.2.3),Version 2024.2 (2024.2.3)
+WebStorm,2025.1.1,2025.1.1
 XCode,,
-Zoom,Version 6.2.3 (40682),Version 6.2.3 (40682)
+Zoom,Version 6.4.10 (56141),Version 6.4.10 (56141)

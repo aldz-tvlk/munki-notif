@@ -4,27 +4,25 @@ import csv
 import os
 import subprocess
 
-# Token GitHub diambil langsung dari script
-Gtoken = "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"
-# Fungsi untuk mendapatkan versi terbaru Tableau Prep Builder dari website
-def check_latest_version_tableau_prep():
-    url = "https://www.tableau.com/support/releases/prep"
+# Fungsi untuk mendapatkan versi terbaru Microsoft Edge dari halaman resmi
+def check_latest_version_edge():
+    url = "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnote-stable-channel"
     response = requests.get(url)
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Mencari semua tautan yang berisi versi Tableau Prep Builder
-        version_tags = soup.find_all('a', class_='cta')
-        
-        # Mengambil versi terbaru dari tautan yang ditemukan
+        version_tags = soup.find_all('h2')
+
         for tag in version_tags:
-            if 'View the current version' in tag.text:  # Mencari teks yang relevan
-                latest_version = tag.text.split()[-1]  # Ambil bagian terakhir yang biasanya adalah versi
+            if "Version" in tag.text:
+                version_text = tag.text.split(':')[0].strip()
+                latest_version = version_text.replace('Version', '').strip()
                 return latest_version
 
+        print("Could not find the version information in the page.")
+        return None
     else:
-        print(f"Failed to access Tableau Prep Builder releases page. Status code: {response.status_code}")
+        print(f"Failed to access Microsoft Edge page. Status code: {response.status_code}")
         return None
 
 # Fungsi untuk membaca versi dari file CSV
@@ -35,7 +33,7 @@ def read_current_version_csv():
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Software", "Munki Version", "Web Version"])
-            writer.writerow(["Tableau Prep Builder", "0.0.0", ""])  # Nilai default jika belum ada data
+            writer.writerow(["Microsoft Edge", "0.0.0", ""])
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
@@ -47,7 +45,7 @@ def read_current_version_csv():
 def update_web_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     rows = []
-    
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
@@ -65,45 +63,43 @@ def update_web_version_csv(software_name, new_version):
 def update_munki_version_csv(software_name, new_version):
     filename = 'current_version.csv'
     rows = []
-    # Baca semua baris dari CSV
+
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         rows = list(reader)
     
-    # Update versi Munki Version pada baris yang sesuai
     for row in rows:
         if row['Software'] == software_name:
             row['Munki Version'] = new_version
     
-    # Tulis kembali file CSV dengan pembaruan
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Fungsi untuk membandingkan versi
-def compare_versions(Munki_version, latest_version):
-    return Munki_version != latest_version
+def compare_versions(munki_version, latest_version):
+    return munki_version != latest_version
 
 # Jalankan autopkg untuk download dan import ke Munki
 def run_autopkg():
     success = True
     failed_archs = []
+
     try:
-        # Jalankan untuk Apple Silicon (arm64)
-        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.TableauPrep"], check=True)
-        print("Autopkg berhasil dijalankan.")
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.MicrosoftEdge"], check=True)
+        print("Autopkg berhasil dijalankan untuk Apple Silicon (arm64).")
     except subprocess.CalledProcessError:
-        print("Autopkg gagal.")
+        print("Autopkg gagal untuk Apple Silicon (arm64).")
         success = False
         failed_archs.append("Apple Silicon (arm64)")
 
-    # Kirim notifikasi jika ada yang gagal
     if not success:
         failed_msg = "\n".join(failed_archs)
-        send_notification_lark("Tableau Prep Builder", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+        send_notification_lark("Microsoft Edge", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
 
     return success
+
 # 🔔 Fungsi untuk mengirim notifikasi ke Lark
 def send_notification_lark(software_name, munki_version, latest_version):
     webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
@@ -129,17 +125,15 @@ def send_notification_lark(software_name, munki_version, latest_version):
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
     versions = read_current_version_csv()
-    latest_tableau_prep_version = check_latest_version_tableau_prep()
-    tableau_prep_Munki_version, tableau_prep_web_version = versions.get('Tableau Prep Builder', (None, None))
+    latest_edge_version = check_latest_version_edge()
+    edge_munki_version, edge_web_version = versions.get('Microsoft Edge', (None, None))
 
-    if compare_versions(tableau_prep_Munki_version, latest_tableau_prep_version):
-        print(f"New version of Microsoft Edge is available: {latest_tableau_prep_version}")
-        update_web_version_csv("Tableau Prep Builder", latest_tableau_prep_version)
-        # Jalankan autopkg
+    if latest_edge_version and compare_versions(edge_munki_version, latest_edge_version):
+        print(f"New version of Microsoft Edge is available: {latest_edge_version}")
+        update_web_version_csv("Microsoft Edge", latest_edge_version)
         run_autopkg()
-        # Perbarui kolom Munki Version di file CSV
-        update_munki_version_csv("Tableau Prep Builder", latest_tableau_prep_version)
-        send_notification_lark("Tableau Prep Builder", tableau_prep_Munki_version, latest_tableau_prep_version)
+        update_munki_version_csv("Microsoft Edge", latest_edge_version)
+        send_notification_lark("Microsoft Edge", edge_munki_version, latest_edge_version)
     else:
         print("The version of Microsoft Edge is already up to date.")
 

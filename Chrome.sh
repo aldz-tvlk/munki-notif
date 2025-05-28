@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 import os
 import re
+import subprocess
 
 # Telegram Bot Token and Chat ID
 telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
@@ -59,12 +60,12 @@ def read_current_version_csv():
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Software", "Mungki Version", "Web Version"])
+            writer.writerow(["Software", "Munki Version", "Web Version"])
             writer.writerow(["Google Chrome", "0.0.0", ""])  # Default value if no data exists yet
 
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
-        versions = {row['Software']: (row['Mungki Version'], row['Web Version']) for row in reader}
+        versions = {row['Software']: (row['Munki Version'], row['Web Version']) for row in reader}
 
     return versions
 
@@ -82,19 +83,62 @@ def update_web_version_csv(software_name, new_version):
             row['Web Version'] = new_version
 
     with open(filename, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
+        writer.writeheader()
+        writer.writerows(rows)
+
+# Fungsi untuk memperbarui kolom Munki Version di file CSV
+def update_munki_version_csv(software_name, new_version):
+    filename = 'current_version.csv'
+    rows = []
+    # Baca semua baris dari CSV
+    with open(filename, 'r') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+    
+    # Update versi Munki Version pada baris yang sesuai
+    for row in rows:
+        if row['Software'] == software_name:
+            row['Munki Version'] = new_version
+    
+    # Tulis kembali file CSV dengan pembaruan
+    with open(filename, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Function to compare versions
-def compare_versions(mungki_version, latest_version):
-    return mungki_version != latest_version
+def compare_versions(Munki_version, latest_version):
+    return Munki_version != latest_version
+
+# Jalankan autopkg untuk download dan import ke Munki
+def run_autopkg():
+    success = True
+    failed_archs = []
+
+    try:
+        # Jalankan untuk Apple Silicon (arm64)
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.chrome"], check=True)
+        print("Autopkg berhasil dijalankan.")
+    except subprocess.CalledProcessError:
+        print("Autopkg gagal.")
+        success = False
+        failed_archs.append("Apple Silicon (arm64)")
+
+    # Kirim notifikasi jika ada yang gagal
+    if not success:
+        failed_msg = "\n".join(failed_archs)
+        send_notification_telegram("Google Chrome", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+
+    return success
+
 
 # Function to send a notification to Telegram
-def send_notification_telegram(software_name, mungki_version, latest_version):
+def send_notification_telegram(software_name, Munki_version, latest_version):
     telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Mungki Version: {mungki_version}\n"
-                        f"Latest version: {latest_version}")
+                        f"Munki Version: {Munki_version}\n"
+                        f"Latest version: {latest_version}\n"
+                        f"Google Chrome is Already Import to MunkiAdmin")
 
     send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
     params = {
@@ -115,16 +159,20 @@ def main():
     versions = read_current_version_csv()
 
     latest_chrome_version = check_latest_version_chrome()
-    chrome_mungki_version, chrome_web_version = versions.get('Google Chrome', (None, None))
+    chrome_Munki_version, chrome_web_version = versions.get('Google Chrome', (None, None))
 
-    if latest_chrome_version and compare_versions(chrome_mungki_version, latest_chrome_version):
-        print(f"New version of Google Chrome available: {latest_chrome_version}")
+    if latest_chrome_version and compare_versions(chrome_Munki_version, latest_chrome_version):
+        print(f"Version baru Google Chrome tersedia: {latest_chrome_version}")
 
         update_web_version_csv("Google Chrome", latest_chrome_version)
+        # Jalankan autopkg
+        run_autopkg()
+        # Perbarui kolom Munki Version di file CSV
+        update_munki_version_csv("Google Chrome", latest_chrome_version)
 
-        send_notification_telegram("Google Chrome", chrome_mungki_version, latest_chrome_version)
+        send_notification_telegram("Google Chrome", chrome_Munki_version, latest_chrome_version)
     else:
-        print("Google Chrome is up to date or could not retrieve the latest version.")
+        print("Version Google Chrome sudah yang terbaru.")
 
 if __name__ == "__main__":
     main()

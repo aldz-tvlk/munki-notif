@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import os
+import subprocess
 
 # Ganti dengan token bot Telegram dan chat ID yang sesuai
 TELEGRAM_TOKEN = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"  # Ganti dengan token bot Telegram kamu
@@ -42,14 +43,14 @@ def read_current_version_csv():
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Software", "Mungki Version", "Web Version"])
+            writer.writerow(["Software", "Munki Version", "Web Version"])
             writer.writerow(["FileZilla", "1.0.0", ""])  # Ganti dengan versi yang sesuai jika perlu
     
     with open(filename, 'r') as file:
         reader = csv.DictReader(file)
         versions = {}
         for row in reader:
-            versions[row['Software']] = (row['Mungki Version'], row['Web Version'])
+            versions[row['Software']] = (row['Munki Version'], row['Web Version'])
     
     return versions
 
@@ -66,27 +67,74 @@ def update_web_version_csv(software_name, new_version):
             row['Web Version'] = new_version
     
     with open(filename, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
+        writer.writeheader()
+        writer.writerows(rows)
+# Fungsi untuk memperbarui kolom Munki Version di file CSV
+def update_munki_version_csv(software_name, new_version):
+    filename = 'current_version.csv'
+    rows = []
+    # Baca semua baris dari CSV
+    with open(filename, 'r') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+    
+    # Update versi Munki Version pada baris yang sesuai
+    for row in rows:
+        if row['Software'] == software_name:
+            row['Munki Version'] = new_version
+    
+    # Tulis kembali file CSV dengan pembaruan
+    with open(filename, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Fungsi untuk membandingkan versi
-def compare_versions(mungki_version, web_version):
-    return mungki_version != web_version
+def compare_versions(Munki_version, web_version):
+    return Munki_version != web_version
 
+# Jalankan autopkg untuk download dan import ke Munki (Apple Silicon & Intel)
+def run_autopkg():
+    success = True
+    failed_archs = []
+
+    try:
+        # Jalankan untuk Apple Silicon (arm64)
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.FileZilla"], check=True)
+        print("Autopkg berhasil dijalankan untuk Apple Silicon (arm64).")
+    except subprocess.CalledProcessError:
+        print("Autopkg gagal untuk Apple Silicon (arm64).")
+        success = False
+        failed_archs.append("Apple Silicon (arm64)")
+    
+    try:
+        # Jalankan untuk Intel (x86_64)
+        subprocess.run(["autopkg", "run", "com.github.munki-tvlk.munki.FileZillax86"], check=True)
+        print("Autopkg berhasil dijalankan untuk Intel (x86_64).")
+    except subprocess.CalledProcessError:
+        print("Autopkg gagal untuk Intel (x86_64).")
+        success = False
+        failed_archs.append("Intel (x86_64)")
+
+    # Kirim notifikasi jika ada yang gagal
+    if not success:
+        failed_msg = "\n".join(failed_archs)
+        send_notification_telegram("FileZilla", "Failed Import", f"Autopkg gagal untuk:\n{failed_msg}")
+
+    return success
 # Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, mungki_version, web_version):
+def send_notification_telegram(software_name, Munki_version, web_version):
     telegram_message = (f"Update Available for {software_name}!\n"
-                        f"Mungki version: {mungki_version}\n"
-                        f"Latest version: {web_version}")
-
+                        f"Munki version: {Munki_version}\n"
+                        f"Latest version: {web_version}\n"
+                        f"FileZilla is Already Import to MunkiAdmin") 
     send_text_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     params = {
         'chat_id': CHAT_ID,
         'text': telegram_message,
         'parse_mode': 'Markdown'
     }
-    
     try:
         response = requests.get(send_text_url, params=params)
         response.raise_for_status()  # Akan memunculkan error jika status code tidak 200
@@ -102,14 +150,18 @@ def main():
     latest_filezilla_version = check_latest_version_filezilla()
     
     if latest_filezilla_version:
-        filezilla_mungki_version, filezilla_web_version = versions.get('FileZilla', (None, None))
+        filezilla_Munki_version, filezilla_web_version = versions.get('FileZilla', (None, None))
 
-        if compare_versions(filezilla_mungki_version, latest_filezilla_version):
-            print(f"Versi baru FileZilla tersedia: {latest_filezilla_version}")
+        if compare_versions(filezilla_Munki_version, latest_filezilla_version):
+            print(f"Version baru FileZilla tersedia: {latest_filezilla_version}")
             update_web_version_csv("FileZilla", latest_filezilla_version)
-            send_notification_telegram("FileZilla", filezilla_mungki_version, latest_filezilla_version)
+            # Jalankan autopkg
+            run_autopkg()
+            # Perbarui kolom Munki Version di file CSV
+            update_munki_version_csv("FileZilla", latest_filezilla_version)
+            send_notification_telegram("FileZilla", filezilla_Munki_version, latest_filezilla_version)
         else:
-            print("Versi FileZilla sudah yang terbaru.")
+            print("Versions FileZilla sudah yang terbaru.")
     else:
         print("Tidak dapat mengambil versi terbaru.")
 

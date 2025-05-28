@@ -2,11 +2,9 @@ import requests
 import csv
 import json
 import os
-
-# Token GitHub dan Telegram diambil dari environment variables
+import subprocess
+# Token GitHub diambil dari environment variables
 Gtoken = "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"
-telegram_token = "8184924708:AAGZ56uxf7LzbukNx2tdx-F148-9NtLdhOM"
-chat_id = "-4523501737"  
 
 # Fungsi untuk mendapatkan versi terbaru Homebrew menggunakan GitHub API dengan autentikasi
 def check_latest_version_homebrew():
@@ -34,7 +32,7 @@ def read_current_version_csv():
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Software", "Mungki Version", "Web Version"])
+            writer.writerow(["Software", "Munki Version", "Web Version"])
             writer.writerow(["Homebrew", "4.3.0", ""])
     
     # Baca file CSV
@@ -42,7 +40,7 @@ def read_current_version_csv():
         reader = csv.DictReader(file)
         versions = {}
         for row in reader:
-            versions[row['Software']] = (row['Mungki Version'], row['Web Version'])
+            versions[row['Software']] = (row['Munki Version'], row['Web Version'])
     
     return versions
 
@@ -63,36 +61,35 @@ def update_web_version_csv(software_name, new_version):
     
     # Tulis kembali file CSV dengan pembaruan
     with open(filename, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Software", "Mungki Version", "Web Version"])
+        writer = csv.DictWriter(file, fieldnames=["Software", "Munki Version", "Web Version"])
         writer.writeheader()
         writer.writerows(rows)
 
 # Fungsi untuk membandingkan versi
-def compare_versions(mungki_version, web_version):
-    return mungki_version != web_version
+def compare_versions(Munki_version, web_version):
+    return Munki_version != web_version
 
-# Fungsi untuk mengirim notifikasi ke Telegram
-def send_notification_telegram(software_name, mungki_version, web_version):
-    telegram_message = f"Update Available for {software_name}!\nMungki version: {mungki_version}\nLatest version: {web_version}"  
-    send_text_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': telegram_message,
-        'parse_mode': 'Markdown'  # Optional: Menggunakan Markdown untuk format pesan yang lebih baik
+# 🔔 Fungsi untuk mengirim notifikasi ke Lark
+def send_notification_lark(software_name, munki_version, latest_version):
+    webhook_url = "https://open.larksuite.com/open-apis/bot/v2/hook/f5a3af1a-bd6a-4482-bf93-fdf9b58bfab6"  # Ganti dengan webhook kamu
+    headers = {"Content-Type": "application/json"}
+    message = {
+        "msg_type": "text",
+        "content": {
+            "text": (
+                f"🚨 Update Available for {software_name}!\n"
+                f"Munki version: {munki_version}\n"
+                f"New version  : {latest_version}\n"
+                f"✅ {software_name} has been imported into MunkiAdmin."
+            )
+        }
     }
-    
     try:
-        response = requests.get(send_text_url, params=params)
-        
-        # Debugging: Cetak status code dari respon Telegram
-        print(f"Telegram response status code: {response.status_code}")
-        print(f"Telegram response text: {response.text}")
-        
-        # Cek jika respon status bukan 200, artinya ada masalah
+        response = requests.post(webhook_url, headers=headers, json=message)
         if response.status_code != 200:
-            raise ValueError(f"Request to Telegram returned an error {response.status_code}, response: {response.text}")
+            raise ValueError(f"Lark webhook error {response.status_code}, response: {response.text}")
     except Exception as e:
-        print(f"Error sending notification to Telegram: {e}")
+        print(f"Error sending notification to Lark: {e}")
 
 # Proses utama untuk mengecek versi dan memperbarui jika diperlukan
 def main():
@@ -101,19 +98,19 @@ def main():
     
     # Cek versi terbaru dari Homebrew
     latest_homebrew_version = check_latest_version_homebrew()
-    homebrew_mungki_version, homebrew_web_version = versions.get('Homebrew', (None, None))
+    homebrew_Munki_version, homebrew_web_version = versions.get('Homebrew', (None, None))
 
     # Jika versi web dari website berbeda dengan yang ada di file CSV, perbarui dan kirim notifikasi
-    if compare_versions(homebrew_mungki_version, latest_homebrew_version):
-        print(f"Versi baru Homebrew tersedia: {latest_homebrew_version}")
+    if compare_versions(homebrew_Munki_version, latest_homebrew_version):
+        print(f"New version of Homebrew is available: {latest_homebrew_version}")
         
         # Perbarui kolom Web Version di file CSV
         update_web_version_csv("Homebrew", latest_homebrew_version)
         
         # Kirim notifikasi ke Slack
-        send_notification_telegram("Homebrew", homebrew_mungki_version, latest_homebrew_version)
+        send_notification_lark("Homebrew", homebrew_Munki_version, latest_homebrew_version)
     else:
-        print("Versi Homebrew sudah yang terbaru.")
+        print("The version of Homebrew is already up to date.")
 
 if __name__ == "__main__":
     main()
